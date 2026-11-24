@@ -1,0 +1,47 @@
+---
+import Base from "../layouts/Base.astro";
+import { getCollection } from "astro:content";
+import { site, sourceUrl } from "../site.config";
+
+const skills = (await getCollection("skills")).sort((a, b) => a.id.localeCompare(b.id));
+const agents = (await getCollection("agents")).sort((a, b) => a.id.localeCompare(b.id));
+const repo = site.repo;
+---
+<Base title="Toolkit" description="Skills and agents with one-line installs.">
+  <h1>Toolkit</h1>
+  <p class="lede">Install everything at once in Claude Code, or one skill at a time in any agent.</p>
+
+  <h2>Claude Code: everything</h2>
+  <pre><code>/plugin marketplace add {repo}
+/plugin install nikolovski-lab@nikolovski-lab</code></pre>
+
+  <h2>Skills</h2>
+  <ul class="list">
+    {skills.map((s) => (
+      <li class="card" id={s.id}>
+        <h3><a href={sourceUrl(`skills/${s.id}/SKILL.md`)}>{s.data.name}</a></h3>
+        <p>{s.data.description}</p>
+        <p class="meta" style="margin-top:8px">Codex</p>
+        <pre><code>npx skills add {repo} --skill {s.id} -a codex</code></pre>
+        <p class="meta" style="margin-top:8px">Cursor</p>
+        <pre><code>npx skills add {repo} --skill {s.id} -a cursor</code></pre>
+        <p class="meta" style="margin-top:8px">Any other agent (pick it when prompted)</p>
+        <pre><code>npx skills add {repo} --skill {s.id}</code></pre>
+      </li>
+    ))}
+  </ul>
+
+  <h2>Agents</h2>
+  {agents.length === 0 ? (
+    <p class="muted">No agents yet.</p>
+  ) : (
+    <ul class="list">
+      {agents.map((a) => (
+        <li class="card">
+          <h3><a href={sourceUrl(`agents/${a.id}.md`)}>{a.data.name}</a></h3>
+          <p>{a.data.description}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>

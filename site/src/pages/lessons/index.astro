@@ -1,0 +1,27 @@
+---
+import Base from "../../layouts/Base.astro";
+import { publishedLessons, formatDate } from "../../lib/lessons";
+
+const lessons = await publishedLessons();
+---
+<Base title="Lessons" description="Dated lessons, each linked to the skill it produced.">
+  <h1>Lessons</h1>
+  <p class="lede">What I learned building with AI agents, and the skill each lesson turned into.</p>
+  {lessons.length === 0 ? (
+    <p class="muted">No lessons published yet.</p>
+  ) : (
+    <ul class="list">
+      {lessons.map((l) => (
+        <li class="card">
+          <h3><a href={`/lessons/${l.id}/`}>{l.data.title}</a></h3>
+          <p class="meta">
+            {formatDate(l.data.date)}
+            {l.data.skill && <> · skill: <a href={`/toolkit/#${l.data.skill}`}>{l.data.skill}</a></>}
+            {l.data.draft && " · draft"}
+          </p>
+          <p>{l.data.summary}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>

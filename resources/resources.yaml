@@ -1,0 +1,24 @@
+# Curated resources. Each entry needs: id (unique, kebab-case), title, url (https),
+# category, why (one line on why it matters). Optional: tags.
+# The three entries below are seed examples; edit or replace them.
+
+- id: claude-code-plugin-marketplaces
+  title: Claude Code plugin marketplaces
+  url: https://code.claude.com/docs/en/plugin-marketplaces
+  category: Claude Code
+  why: How a repo like this one becomes an installable plugin marketplace.
+  tags: [plugins, distribution]
+
+- id: claude-code-action
+  title: Claude Code GitHub Action
+  url: https://github.com/anthropics/claude-code-action
+  category: Automation
+  why: Runs Claude Code inside GitHub Actions; powers this repo's weekly skill review.
+  tags: [ci, github]
+
+- id: skills-cli
+  title: skills CLI
+  url: https://github.com/vercel-labs/skills
+  category: Distribution
+  why: One command to install a SKILL.md into Claude Code, Codex, Cursor and other agents.
+  tags: [skills, install]

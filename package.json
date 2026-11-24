@@ -1,0 +1,16 @@
+{
+  "name": "nikolovski-lab",
+  "private": true,
+  "type": "module",
+  "workspaces": ["site"],
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "dev": "npm run dev -w site",
+    "build": "npm run validate && npm run build -w site",
+    "preview": "npm run preview -w site"
+  },
+  "devDependencies": {
+    "yaml": "^2.8.1"
+  }
+}

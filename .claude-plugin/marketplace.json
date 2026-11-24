@@ -1,0 +1,17 @@
+{
+  "name": "nikolovski-lab",
+  "owner": {
+    "name": "Martino Nikolovski"
+  },
+  "description": "Skills, agents and starter packs from the Nikolovski Lab.",
+  "plugins": [
+    {
+      "name": "nikolovski-lab",
+      "source": "./",
+      "description": "Every skill and agent in the Nikolovski Lab, including architecture-review.",
+      "homepage": "https://nikolovski.ai",
+      "license": "MIT",
+      "keywords": ["architecture", "code-review", "skills"]
+    }
+  ]
+}

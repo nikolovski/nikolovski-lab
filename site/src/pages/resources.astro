@@ -1,0 +1,30 @@
+---
+import Base from "../layouts/Base.astro";
+import { getCollection } from "astro:content";
+
+const resources = await getCollection("resources");
+const byCategory = new Map<string, typeof resources>();
+for (const r of resources) {
+  const list = byCategory.get(r.data.category) ?? [];
+  list.push(r);
+  byCategory.set(r.data.category, list);
+}
+const categories = [...byCategory.keys()].sort();
+---
+<Base title="Resources" description="Curated links, each with a line on why it matters.">
+  <h1>Resources</h1>
+  <p class="lede">Links I keep coming back to, and why.</p>
+  {categories.map((c) => (
+    <>
+      <h2>{c}</h2>
+      <ul class="list">
+        {byCategory.get(c)!.map((r) => (
+          <li class="card">
+            <h3><a href={r.data.url}>{r.data.title}</a></h3>
+            <p>{r.data.why}</p>
+          </li>
+        ))}
+      </ul>
+    </>
+  ))}
+</Base>

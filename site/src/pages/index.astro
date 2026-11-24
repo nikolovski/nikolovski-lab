@@ -1,0 +1,35 @@
+---
+import Base from "../layouts/Base.astro";
+import { getCollection } from "astro:content";
+import { site } from "../site.config";
+import { publishedLessons, formatDate } from "../lib/lessons";
+
+const lessons = (await publishedLessons()).slice(0, 3);
+const skills = await getCollection("skills");
+const resources = await getCollection("resources");
+---
+<Base>
+  <h1>{site.title}</h1>
+  <p class="lede">{site.tagline}</p>
+
+  <ul class="list">
+    <li class="card"><h3><a href="/lessons/">Lessons</a></h3><p class="muted">Dated write-ups, each tied to the skill it produced.</p></li>
+    <li class="card"><h3><a href="/toolkit/">Toolkit</a></h3><p class="muted">{skills.length} skill{skills.length === 1 ? "" : "s"}, with one-line installs for Claude Code, Codex, Cursor and more.</p></li>
+    <li class="card"><h3><a href="/resources/">Resources</a></h3><p class="muted">{resources.length} curated link{resources.length === 1 ? "" : "s"}, each with why it matters.</p></li>
+  </ul>
+
+  <h2>Latest lessons</h2>
+  {lessons.length === 0 ? (
+    <p class="muted">First lesson coming soon.</p>
+  ) : (
+    <ul class="list">
+      {lessons.map((l) => (
+        <li class="card">
+          <h3><a href={`/lessons/${l.id}/`}>{l.data.title}</a></h3>
+          <p class="meta">{formatDate(l.data.date)}{l.data.draft && " · draft"}</p>
+          <p>{l.data.summary}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>

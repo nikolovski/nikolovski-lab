@@ -1,0 +1,97 @@
+# Weekly skill review with the Claude Code GitHub Action.
+#
+# OFF by default. It runs on the weekly schedule only when the repository
+# variable SKILL_REVIEW_ENABLED is "true" (Settings > Secrets and variables >
+# Actions > Variables). You can always run it by hand from the Actions tab.
+#
+# Needs the repository secret ANTHROPIC_API_KEY (Settings > Secrets and
+# variables > Actions > Secrets). Each run uses API credits.
+#
+# Also enable: Settings > Actions > General > Workflow permissions >
+# "Allow GitHub Actions to create and approve pull requests".
+#
+# Note: PRs opened with the default GITHUB_TOKEN don't trigger other
+# workflows, so run "Validate" on them by pushing a commit or re-running it.
+
+name: Weekly skill review
+
+on:
+  schedule:
+    - cron: "0 15 * * 1" # Mondays 15:00 UTC (7:00 Pacific standard time)
+  workflow_dispatch:
+    inputs:
+      max_skills:
+        description: "How many stale skills to review"
+        default: "3"
+      stale_days:
+        description: "A skill counts as stale after this many days without a commit"
+        default: "30"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: skill-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    if: github.event_name == 'workflow_dispatch' || vars.SKILL_REVIEW_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pick skills untouched for N+ days
+        id: pick
+        env:
+          MAX: ${{ inputs.max_skills || '3' }}
+          DAYS: ${{ inputs.stale_days || '30' }}
+        run: |
+          cutoff=$(date -d "-${DAYS} days" +%s)
+          stale=""
+          for f in skills/*/SKILL.md; do
+            [ -f "$f" ] || continue
+            last=$(git log -1 --format=%ct -- "$(dirname "$f")")
+            if [ -z "$last" ] || [ "$last" -lt "$cutoff" ]; then
+              stale="$stale ${last:-0}:$(basename "$(dirname "$f")")"
+            fi
+          done
+          picked=$(echo $stale | tr ' ' '\n' | sort -n | head -n "$MAX" | cut -d: -f2 | xargs)
+          echo "skills=$picked" >> "$GITHUB_OUTPUT"
+          echo "Stale skills picked: ${picked:-none}"
+
+      - name: Review with Claude
+        if: steps.pick.outputs.skills != ''
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Read,Edit,Write,Glob,Grep,WebSearch,WebFetch,Bash(git checkout:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(npm run validate)"
+          prompt: |
+            You maintain the Nikolovski Lab repo. Read AGENTS.md first and follow it.
+
+            Review these skills, which have not changed in a while: ${{ steps.pick.outputs.skills }}
+
+            For each skill, one at a time:
+            1. Read skills/<name>/SKILL.md and any files next to it.
+            2. Use web search to check whether its advice, tools, versions, links and
+               standards are still current. Prefer official docs and primary sources.
+            3. If you find something worth improving, make the smallest useful edit.
+               Keep the author's voice and structure. Do not rewrite for style alone.
+            4. Run `npm run validate`. Fix anything you broke.
+            5. Create branch `skill-review/<name>-${{ github.run_id }}`, commit, push,
+               and open a DRAFT pull request with `gh pr create --draft`. In the PR
+               body list each change, why, and the source URL that supports it.
+            6. If nothing needs changing, open no PR for that skill.
+
+            Skip a skill that already has an open PR from a branch starting with
+            `skill-review/<name>-` (check with `gh pr list`). Never push to main.
+            Never merge. Never touch secrets or workflow files.
