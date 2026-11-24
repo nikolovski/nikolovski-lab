@@ -1,0 +1,17 @@
+{
+  "name": "solo-saas-founder",
+  "description": "Starter pack for a solo founder building a SaaS: architecture reviews of your own system and sharper prompts for every AI tool you use.",
+  "author": {
+    "name": "Martino Nikolovski"
+  },
+  "homepage": "https://nikolovski.ai/toolkit/#solo-saas-founder",
+  "repository": "https://github.com/nikolovski/nikolovski-lab",
+  "license": "MIT",
+  "keywords": [
+    "starter-pack",
+    "saas",
+    "founder",
+    "architecture",
+    "prompt-engineering"
+  ]
+}

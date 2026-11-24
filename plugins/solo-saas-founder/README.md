@@ -15,6 +15,8 @@ On Claude Code 2.1.275 or later, one line does both:
 /plugin install solo-saas-founder --marketplace nikolovski/nikolovski-lab
 ```
 
+In the Claude app, add `nikolovski/nikolovski-lab` as a plugin marketplace, then install `solo-saas-founder`.
+
 ## What's in it
 
 | Skill | Why it's in this pack |
@@ -32,4 +34,4 @@ Ideas for skills this pack should get once they exist in `skills/`. None of them
 
 ## How it's built
 
-The pack has no copies of skills. Its entry in [`.claude-plugin/marketplace.json`](../../.claude-plugin/marketplace.json) points at the repo root and lists the skill folders it includes, so it always ships the current version from `skills/`. To add a skill to the pack, add its folder to that entry's `skills` list and to the table above.
+`skills/` at the repo root is the source of truth. The pack ships generated copies in `plugins/solo-saas-founder/skills/`, because the Claude app loads each plugin as its own folder and can't reach skills outside it. To add a skill to the pack, run `npm run sync:plugins -- --add solo-saas-founder <skill>` and add it to the table above. `npm run sync:plugins` refreshes the copies after a skill changes, and `npm run validate` fails when a copy is out of step, so never edit the copies by hand.

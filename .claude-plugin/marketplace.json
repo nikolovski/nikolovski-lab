@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "nikolovski-lab",
-      "source": "./",
+      "source": "./plugins/nikolovski-lab",
       "description": "Every skill and agent in the Nikolovski Lab, including architecture-review and improve-prompt.",
       "homepage": "https://nikolovski.ai",
       "license": "MIT",
@@ -20,7 +20,7 @@
     },
     {
       "name": "solo-saas-founder",
-      "source": "./",
+      "source": "./plugins/solo-saas-founder",
       "description": "Starter pack for a solo founder building a SaaS: architecture reviews of your own system and sharper prompts for every AI tool you use.",
       "homepage": "https://nikolovski.ai/toolkit/#solo-saas-founder",
       "license": "MIT",
@@ -30,15 +30,11 @@
         "founder",
         "architecture",
         "prompt-engineering"
-      ],
-      "skills": [
-        "./skills/architecture-review",
-        "./skills/improve-prompt"
       ]
     },
     {
       "name": "code-reviewer",
-      "source": "./",
+      "source": "./plugins/code-reviewer",
       "description": "Starter pack for reviewing code and systems: an evidence-based architecture review with a scorecard, ranked findings and a roadmap.",
       "homepage": "https://nikolovski.ai/toolkit/#code-reviewer",
       "license": "MIT",
@@ -46,9 +42,6 @@
         "starter-pack",
         "code-review",
         "architecture"
-      ],
-      "skills": [
-        "./skills/architecture-review"
       ]
     }
   ]

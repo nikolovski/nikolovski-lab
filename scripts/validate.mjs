@@ -4,6 +4,7 @@ import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
+import { syncPluginCopies, copiedSkills } from "./lib/plugin-copies.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const errors = [];
@@ -114,13 +115,13 @@ if (existsSync(resFile)) {
   }
 }
 
-// Plugin marketplace, starter packs and standalone plugins
+// Plugin marketplace and plugins. The Claude app loads each plugin as its own folder
+// with .claude-plugin/plugin.json, so every entry points at ./plugins/<name>.
 const RESERVED_RE = /^(claude-|anthropic-|anthropics-|cc-plugin-)/;
 const mpFile = join(root, ".claude-plugin", "marketplace.json");
 const at = rel(mpFile);
-const entryNames = new Set();
-const packNames = new Set();
 const pluginDirs = new Set();
+const packNames = new Set();
 function checkManifest(pj, expectedName) {
   let m;
   try { m = JSON.parse(readFileSync(pj, "utf8")); } catch (e) { err(rel(pj), `invalid JSON (${e.message})`); return; }
@@ -130,12 +131,21 @@ function checkManifest(pj, expectedName) {
   if (m.author != null && !str(m.author?.name)) err(rel(pj), "`author` must be an object with a `name`");
   if (m.homepage != null) { try { new URL(m.homepage); } catch { err(rel(pj), "`homepage` must be a URL"); } }
   if (m.keywords != null && !(Array.isArray(m.keywords) && m.keywords.every(str))) err(rel(pj), "`keywords` must be a list of strings");
+  for (const k of ["skills", "agents", "commands"]) {
+    if (m[k] != null) err(rel(pj), `drop \`${k}\`: put the files in the plugin folder instead (see plugins/README.md)`);
+  }
 }
+let mp;
 try {
-  const mp = JSON.parse(readFileSync(mpFile, "utf8"));
+  mp = JSON.parse(readFileSync(mpFile, "utf8"));
+} catch (e) {
+  err(at, `missing or invalid JSON (${e.message})`);
+}
+if (mp) {
   if (!str(mp.name)) err(at, "`name` is required");
   if (!str(mp.owner?.name)) err(at, "`owner.name` is required");
   if (!Array.isArray(mp.plugins) || mp.plugins.length === 0) err(at, "`plugins` must be a non-empty list");
+  const entryNames = new Set();
   for (const p of mp.plugins ?? []) {
     if (!str(p.name)) { err(at, "every plugin needs a `name`"); continue; }
     const who = `plugin "${p.name}"`;
@@ -145,56 +155,39 @@ try {
     entryNames.add(p.name);
     if (!str(p.description)) err(at, `${who}: \`description\` is required`);
     if (p.homepage != null) { try { new URL(p.homepage); } catch { err(at, `${who}: \`homepage\` must be a URL`); } }
-    if (typeof p.source !== "string") continue;
-    if (p.source !== "./" && p.source !== "." && !p.source.startsWith("./")) err(at, `${who}: relative source must start with ./`);
-    if (p.source.includes("..")) err(at, `${who}: source must not contain ..`);
-    const dir = join(root, p.source);
-    if (!existsSync(dir)) { err(at, `${who}: source ${p.source} does not exist`); continue; }
-    const isRoot = p.source === "./" || p.source === ".";
-    if (!isRoot) {
-      const m = p.source.match(/^\.\/plugins\/([^/]+)\/?$/);
-      if (!m) err(at, `${who}: a non-root source must be ./plugins/<name>`);
-      else {
-        pluginDirs.add(m[1]);
-        if (m[1] !== p.name) err(at, `${who}: folder plugins/${m[1]} must match the entry name`);
-      }
-      const pj = join(dir, ".claude-plugin", "plugin.json");
-      if (!existsSync(pj)) err(at, `${who}: ${p.source}.claude-plugin/plugin.json is missing`.replace("//", "/"));
-      else checkManifest(pj, p.name);
-    } else if (existsSync(join(root, ".claude-plugin", "plugin.json"))) {
-      checkManifest(join(root, ".claude-plugin", "plugin.json"), p.name);
+    for (const k of ["skills", "agents", "commands"]) {
+      if (p[k] != null) err(at, `${who}: drop \`${k}\`: the Claude app loads the plugin folder as it is (see plugins/README.md)`);
     }
-    if (p.skills != null) {
-      // Starter pack: root source plus a list of skill folders from skills/.
-      if (!isRoot) err(at, `${who}: a \`skills\` list is only for starter packs whose source is ./`);
-      const list = Array.isArray(p.skills) ? p.skills : [p.skills];
-      if (list.length === 0) err(at, `${who}: \`skills\` must list at least one skill`);
-      const seen = new Set();
-      for (const s of list) {
-        const m = typeof s === "string" && s.match(/^\.\/skills\/([^/]+)\/?$/);
-        if (!m) { err(at, `${who}: skill path "${s}" must look like ./skills/<name>`); continue; }
-        if (!skillNames.has(m[1])) err(at, `${who}: skill "${m[1]}" has no folder in skills/`);
-        if (seen.has(m[1])) err(at, `${who}: skill "${m[1]}" is listed twice`);
-        seen.add(m[1]);
-      }
-      if (isRoot) {
-        packNames.add(p.name);
-        const readme = join(root, "plugins", p.name, "README.md");
-        if (!existsSync(readme)) err(at, `${who}: starter pack needs plugins/${p.name}/README.md`);
-        else {
-          const text = readFileSync(readme, "utf8");
-          if (!text.includes(`/plugin install ${p.name}@${mp.name}`)) err(rel(readme), `must show the install line \`/plugin install ${p.name}@${mp.name}\``);
-          for (const name of seen) if (!text.includes(`skills/${name}/`)) err(rel(readme), `must list the skill "${name}" that the pack ships`);
-        }
-      }
+    if (typeof p.source !== "string") continue;
+    const m = p.source.match(/^\.\/plugins\/([^/]+)\/?$/);
+    if (!m) { err(at, `${who}: source must be ./plugins/<name>; the Claude app can't load a plugin from the repo root`); continue; }
+    if (m[1] !== p.name) err(at, `${who}: folder plugins/${m[1]} must match the entry name`);
+    const dir = join(root, "plugins", m[1]);
+    if (!existsSync(dir)) { err(at, `${who}: source ${p.source} does not exist`); continue; }
+    pluginDirs.add(m[1]);
+    const pj = join(dir, ".claude-plugin", "plugin.json");
+    if (!existsSync(pj)) err(at, `${who}: plugins/${m[1]}/.claude-plugin/plugin.json is missing`);
+    else checkManifest(pj, p.name);
+    if (existsSync(join(dir, "bin"))) err(`plugins/${m[1]}`, "remove bin/: the Claude app won't install a plugin that has one");
+    const shipped = existsSync(pj) ? copiedSkills(root, m[1]) : [];
+    if (m[1] !== mp.name && shipped.length > 0) packNames.add(m[1]);
+    const readme = join(dir, "README.md");
+    if (!existsSync(readme)) err(`plugins/${m[1]}`, "needs a README.md");
+    else {
+      const text = readFileSync(readme, "utf8");
+      if (!text.includes(`/plugin install ${p.name}@${mp.name}`)) err(rel(readme), `must show the install line \`/plugin install ${p.name}@${mp.name}\``);
+      for (const name of shipped) if (!text.includes(`skills/${name}/`)) err(rel(readme), `must list the skill "${name}" that the plugin ships`);
     }
   }
-} catch (e) {
-  err(at, `missing or invalid JSON (${e.message})`);
+  if (str(mp.name) && !entryNames.has(mp.name)) err(at, `the main plugin "${mp.name}" (named like the marketplace) is missing`);
+  // Generated copies must match skills/ and agents/.
+  if (errors.length === 0) {
+    for (const c of syncPluginCopies(root)) err("plugins", `${c} (run npm run sync:plugins)`);
+  }
 }
-// Every folder in plugins/ is a starter pack or a registered standalone plugin.
+// Every folder in plugins/ is a plugin registered in the marketplace.
 for (const d of dirs(join(root, "plugins"))) {
-  if (!packNames.has(d) && !pluginDirs.has(d)) err(`plugins/${d}`, "is neither a starter pack nor a plugin registered in .claude-plugin/marketplace.json");
+  if (!pluginDirs.has(d)) err(`plugins/${d}`, "is not a plugin registered in .claude-plugin/marketplace.json");
 }
 
 for (const w of warn) console.warn(`warning: ${w}`);
