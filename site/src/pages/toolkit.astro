@@ -2,18 +2,38 @@
 import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { site, sourceUrl } from "../site.config";
+import marketplace from "../../../.claude-plugin/marketplace.json";
 
 const skills = (await getCollection("skills")).sort((a, b) => a.id.localeCompare(b.id));
 const agents = (await getCollection("agents")).sort((a, b) => a.id.localeCompare(b.id));
 const repo = site.repo;
+
+// Starter packs are marketplace entries that point at the repo root and list skill folders.
+const packs = (marketplace.plugins as { name: string; description: string; source: string; skills?: string[] }[])
+  .filter((p) => p.source === "./" && Array.isArray(p.skills))
+  .map((p) => ({ ...p, skillIds: p.skills!.map((s) => s.replace(/^\.\/skills\//, "").replace(/\/$/, "")) }));
 ---
-<Base title="Toolkit" description="Skills and agents with one-line installs.">
+<Base title="Toolkit" description="Skills, starter packs and agents with one-line installs.">
   <h1>Toolkit</h1>
-  <p class="lede">Install everything at once in Claude Code, or one skill at a time in any agent.</p>
+  <p class="lede">Install everything at once in Claude Code, a starter pack, or one skill at a time in any agent.</p>
 
   <h2>Claude Code: everything</h2>
   <pre><code>/plugin marketplace add {repo}
 /plugin install nikolovski-lab@nikolovski-lab</code></pre>
+
+  <h2>Claude Code: starter packs</h2>
+  <p class="muted">A smaller bundle for one kind of work. Add the marketplace once, then install a pack.</p>
+  <ul class="list">
+    {packs.map((p) => (
+      <li class="card" id={p.name}>
+        <h3><a href={sourceUrl(`plugins/${p.name}/README.md`)}>{p.name}</a></h3>
+        <p>{p.description}</p>
+        <p class="meta" style="margin-top:8px">Skills: {p.skillIds.map((id, i) => (<>{i > 0 && ", "}<a href={`#${id}`}>{id}</a></>))}</p>
+        <pre><code>/plugin marketplace add {repo}
+/plugin install {p.name}@{marketplace.name}</code></pre>
+      </li>
+    ))}
+  </ul>
 
   <h2>Skills</h2>
   <ul class="list">
