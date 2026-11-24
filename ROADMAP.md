@@ -6,11 +6,12 @@
 - [x] Astro site with Lessons, Toolkit and Resources
 - [x] CI: content validation and site build on every PR
 - [x] Tagged releases
-- [ ] Paste the real `architecture-review` skill and publish the first lesson
+- [x] Add the `architecture-review` skill
+- [ ] Write the `architecture-review` lesson
 - [x] Add the `improve-prompt` skill
 - [ ] Write the `improve-prompt` lesson
-- [ ] Connect Vercel and point nikolovski.ai at it
-- [ ] Turn on the weekly skill review once the API key secret is set
+- [x] Connect Vercel and point nikolovski.ai at it
+- [ ] Turn on the weekly skill review: API key secret is set; still needs the `SKILL_REVIEW_ENABLED` variable set to `true`
 
 ## Phase 1
 - [ ] **MCP server**: lets anyone's agent search and pull skills and lessons from this repo (`search_skills`, `get_skill`, `search_lessons`, `get_lesson`). Likely a small read-only server deployed next to the site.
