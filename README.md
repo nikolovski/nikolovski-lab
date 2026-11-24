@@ -40,6 +40,7 @@ npx skills add OWNER/nikolovski-lab --skill architecture-review -a cursor
 | Skill | What it does |
 | --- | --- |
 | [architecture-review](skills/architecture-review/SKILL.md) | Evidence-based architecture review. Outputs a scorecard, ranked findings and a roadmap. |
+| [improve-prompt](skills/improve-prompt/SKILL.md) | Rewrites a rough prompt for any AI tool. Asks first, states assumptions, hands the prompt back for your OK. |
 
 ## Working on the repo
 

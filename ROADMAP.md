@@ -7,6 +7,8 @@
 - [x] CI: content validation and site build on every PR
 - [x] Tagged releases
 - [ ] Paste the real `architecture-review` skill and publish the first lesson
+- [x] Add the `improve-prompt` skill
+- [ ] Write the `improve-prompt` lesson
 - [ ] Connect Vercel and point nikolovski.ai at it
 - [ ] Turn on the weekly skill review once the API key secret is set
 
