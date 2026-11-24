@@ -6,11 +6,16 @@
   "engines": { "node": ">=22.12" },
   "scripts": {
     "validate": "node scripts/validate.mjs",
+    "test": "node --test test/*.test.mjs",
+    "mcp:dev": "node scripts/mcp-dev.mjs",
+    "mcp:smoke": "node scripts/mcp-smoke.mjs",
     "dev": "npm run dev -w site",
     "build": "npm run validate && npm run build -w site",
     "preview": "npm run preview -w site"
   },
-  "devDependencies": {
-    "yaml": "^2.8.1"
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "yaml": "^2.8.1",
+    "zod": "^4.6.7"
   }
 }
