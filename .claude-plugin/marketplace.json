@@ -8,10 +8,15 @@
     {
       "name": "nikolovski-lab",
       "source": "./",
-      "description": "Every skill and agent in the Nikolovski Lab, including architecture-review.",
+      "description": "Every skill and agent in the Nikolovski Lab, including architecture-review and improve-prompt.",
       "homepage": "https://nikolovski.ai",
       "license": "MIT",
-      "keywords": ["architecture", "code-review", "skills"]
+      "keywords": [
+        "architecture",
+        "code-review",
+        "prompt-engineering",
+        "skills"
+      ]
     }
   ]
 }
