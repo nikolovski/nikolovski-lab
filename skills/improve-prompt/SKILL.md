@@ -59,12 +59,12 @@ Prefer specific over general, positive instructions ("write in plain sentences")
 Return the result per <output_format>, then stop and wait. If the user asks for changes, revise and hand back again. Run the prompt only when they say so.
 
 <target_guides>
-- **Claude:** XML tags for inputs and sections; state the role and reason behind constraints; ask for thinking before answering on hard reasoning tasks; put long documents before the question.
+- **Claude:** XML tags for inputs and sections; state the role and reason behind constraints; on hard reasoning tasks, ask it to think thoroughly rather than scripting the steps (current models think on their own; step-by-step instructions are a fallback when thinking is off); put long documents before the question.
 - **ChatGPT / GPT models:** Markdown headings for sections; explicit output format; delimit inputs with fenced blocks.
 - **Coding agents (Claude Code, Codex, Cursor, Copilot):** name files, functions and paths; state the stack and versions; say how to verify (tests to run, commands, expected behavior); state what must not change; one task per prompt.
 - **Gemini:** clear sections, explicit format, examples where the format is unusual.
-- **Image models (Midjourney, DALL-E, Stable Diffusion, Flux, Imagen):** subject, setting, composition and camera, lighting, style or medium, color palette, mood, aspect ratio. Use the tool's own syntax for parameters (for example `--ar 16:9` in Midjourney) and negative prompts where the tool supports them.
-- **Video models (Sora, Veo, Runway):** subject, action over time, camera movement, shot length, style, setting, sound if supported.
+- **Image models (Midjourney, GPT Image, Stable Diffusion, Flux, Imagen):** subject, setting, composition and camera, lighting, style or medium, color palette, mood, aspect ratio. Use the tool's own syntax for parameters (for example `--ar 16:9` in Midjourney) and negative prompts where the tool supports them.
+- **Video models (Veo, Runway):** subject, action over time, camera movement, shot length, style, setting, sound if supported.
 - **Other or unknown:** a plain structured prompt using the parts in step 4.
 </target_guides>
 
