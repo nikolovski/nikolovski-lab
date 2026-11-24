@@ -280,7 +280,7 @@ Treat principles as heuristics for managing the cost of change. Flag a violation
 - **Red flags:** cost growing faster than usage; no cost attribution per team/tenant; always-on non-prod environments at prod size.
 
 ### D15. AI/LLM components (conditional: if the system uses LLMs or agents)
-- Map against **OWASP Top 10 for LLM Applications 2025**: prompt injection, sensitive information disclosure, supply chain, data and model poisoning, improper output handling, excessive agency, system prompt leakage, vector and embedding weaknesses, misinformation, unbounded consumption.
+- Map against **OWASP Top 10 for LLM Applications 2026**: prompt injection, sensitive information disclosure, excessive agency, supply chain, data and model poisoning, unbounded consumption, misinformation, hidden context exposure, vector and embedding weaknesses, improper output handling.
 - Trust boundaries around model inputs/outputs; LLM output treated as untrusted input; tool/agent permissions least-privileged with human approval for high-impact actions.
 - Tenant isolation in retrieval (RAG) indexes; PII handling in prompts and logs.
 - Evaluation harness, regression tests, guardrails, model/provider fallback, timeouts, token and cost budgets per tenant.
