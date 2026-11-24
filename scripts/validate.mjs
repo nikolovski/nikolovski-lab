@@ -114,31 +114,87 @@ if (existsSync(resFile)) {
   }
 }
 
-// Plugin marketplace
+// Plugin marketplace, starter packs and standalone plugins
+const RESERVED_RE = /^(claude-|anthropic-|anthropics-|cc-plugin-)/;
 const mpFile = join(root, ".claude-plugin", "marketplace.json");
+const at = rel(mpFile);
+const entryNames = new Set();
+const packNames = new Set();
+const pluginDirs = new Set();
+function checkManifest(pj, expectedName) {
+  let m;
+  try { m = JSON.parse(readFileSync(pj, "utf8")); } catch (e) { err(rel(pj), `invalid JSON (${e.message})`); return; }
+  if (!str(m.name)) err(rel(pj), "`name` is required");
+  else if (m.name !== expectedName) err(rel(pj), `name "${m.name}" must equal the marketplace entry name "${expectedName}"`);
+  if (m.description != null && !str(m.description)) err(rel(pj), "`description` must be a non-empty string");
+  if (m.author != null && !str(m.author?.name)) err(rel(pj), "`author` must be an object with a `name`");
+  if (m.homepage != null) { try { new URL(m.homepage); } catch { err(rel(pj), "`homepage` must be a URL"); } }
+  if (m.keywords != null && !(Array.isArray(m.keywords) && m.keywords.every(str))) err(rel(pj), "`keywords` must be a list of strings");
+}
 try {
   const mp = JSON.parse(readFileSync(mpFile, "utf8"));
-  if (!str(mp.name)) err(rel(mpFile), "`name` is required");
-  if (!str(mp.owner?.name)) err(rel(mpFile), "`owner.name` is required");
-  if (!Array.isArray(mp.plugins) || mp.plugins.length === 0) err(rel(mpFile), "`plugins` must be a non-empty list");
+  if (!str(mp.name)) err(at, "`name` is required");
+  if (!str(mp.owner?.name)) err(at, "`owner.name` is required");
+  if (!Array.isArray(mp.plugins) || mp.plugins.length === 0) err(at, "`plugins` must be a non-empty list");
   for (const p of mp.plugins ?? []) {
-    if (!str(p.name)) err(rel(mpFile), "every plugin needs a `name`");
-    if (typeof p.source === "string") {
-      if (p.source !== "." && !p.source.startsWith("./")) err(rel(mpFile), `plugin "${p.name}": relative source must start with ./`);
-      if (p.source.includes("..")) err(rel(mpFile), `plugin "${p.name}": source must not contain ..`);
-      const dir = join(root, p.source);
-      if (!existsSync(dir)) err(rel(mpFile), `plugin "${p.name}": source ${p.source} does not exist`);
+    if (!str(p.name)) { err(at, "every plugin needs a `name`"); continue; }
+    const who = `plugin "${p.name}"`;
+    if (!NAME_RE.test(p.name) || p.name.length > 64) err(at, `${who}: name must be lowercase-hyphenated, max 64 chars`);
+    if (RESERVED_RE.test(p.name)) err(at, `${who}: names starting with claude-, anthropic- or cc-plugin- are reserved`);
+    if (entryNames.has(p.name)) err(at, `${who}: duplicate name`);
+    entryNames.add(p.name);
+    if (!str(p.description)) err(at, `${who}: \`description\` is required`);
+    if (p.homepage != null) { try { new URL(p.homepage); } catch { err(at, `${who}: \`homepage\` must be a URL`); } }
+    if (typeof p.source !== "string") continue;
+    if (p.source !== "./" && p.source !== "." && !p.source.startsWith("./")) err(at, `${who}: relative source must start with ./`);
+    if (p.source.includes("..")) err(at, `${who}: source must not contain ..`);
+    const dir = join(root, p.source);
+    if (!existsSync(dir)) { err(at, `${who}: source ${p.source} does not exist`); continue; }
+    const isRoot = p.source === "./" || p.source === ".";
+    if (!isRoot) {
+      const m = p.source.match(/^\.\/plugins\/([^/]+)\/?$/);
+      if (!m) err(at, `${who}: a non-root source must be ./plugins/<name>`);
+      else {
+        pluginDirs.add(m[1]);
+        if (m[1] !== p.name) err(at, `${who}: folder plugins/${m[1]} must match the entry name`);
+      }
       const pj = join(dir, ".claude-plugin", "plugin.json");
-      if (existsSync(pj)) {
-        try {
-          const m = JSON.parse(readFileSync(pj, "utf8"));
-          if (m.name !== p.name) err(rel(pj), `name "${m.name}" must equal the marketplace entry name "${p.name}"`);
-        } catch (e) { err(rel(pj), `invalid JSON (${e.message})`); }
+      if (!existsSync(pj)) err(at, `${who}: ${p.source}.claude-plugin/plugin.json is missing`.replace("//", "/"));
+      else checkManifest(pj, p.name);
+    } else if (existsSync(join(root, ".claude-plugin", "plugin.json"))) {
+      checkManifest(join(root, ".claude-plugin", "plugin.json"), p.name);
+    }
+    if (p.skills != null) {
+      // Starter pack: root source plus a list of skill folders from skills/.
+      if (!isRoot) err(at, `${who}: a \`skills\` list is only for starter packs whose source is ./`);
+      const list = Array.isArray(p.skills) ? p.skills : [p.skills];
+      if (list.length === 0) err(at, `${who}: \`skills\` must list at least one skill`);
+      const seen = new Set();
+      for (const s of list) {
+        const m = typeof s === "string" && s.match(/^\.\/skills\/([^/]+)\/?$/);
+        if (!m) { err(at, `${who}: skill path "${s}" must look like ./skills/<name>`); continue; }
+        if (!skillNames.has(m[1])) err(at, `${who}: skill "${m[1]}" has no folder in skills/`);
+        if (seen.has(m[1])) err(at, `${who}: skill "${m[1]}" is listed twice`);
+        seen.add(m[1]);
+      }
+      if (isRoot) {
+        packNames.add(p.name);
+        const readme = join(root, "plugins", p.name, "README.md");
+        if (!existsSync(readme)) err(at, `${who}: starter pack needs plugins/${p.name}/README.md`);
+        else {
+          const text = readFileSync(readme, "utf8");
+          if (!text.includes(`/plugin install ${p.name}@${mp.name}`)) err(rel(readme), `must show the install line \`/plugin install ${p.name}@${mp.name}\``);
+          for (const name of seen) if (!text.includes(`skills/${name}/`)) err(rel(readme), `must list the skill "${name}" that the pack ships`);
+        }
       }
     }
   }
 } catch (e) {
-  err(rel(mpFile), `missing or invalid JSON (${e.message})`);
+  err(at, `missing or invalid JSON (${e.message})`);
+}
+// Every folder in plugins/ is a starter pack or a registered standalone plugin.
+for (const d of dirs(join(root, "plugins"))) {
+  if (!packNames.has(d) && !pluginDirs.has(d)) err(`plugins/${d}`, "is neither a starter pack nor a plugin registered in .claude-plugin/marketplace.json");
 }
 
 for (const w of warn) console.warn(`warning: ${w}`);
@@ -147,4 +203,4 @@ if (errors.length) {
   for (const e of errors) console.error(`  - ${e}`);
   process.exit(1);
 }
-console.log(`ok: ${skillNames.size} skill(s), ${demoSkills.size} demo(s), content valid`);
+console.log(`ok: ${skillNames.size} skill(s), ${demoSkills.size} demo(s), ${packNames.size} starter pack(s), content valid`);

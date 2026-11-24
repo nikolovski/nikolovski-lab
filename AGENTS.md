@@ -12,6 +12,7 @@ Git is the only source of truth. There is no database. The site in `site/` only 
 - **Demos**: `demos/<skill>/` with `demo.md` (frontmatter `skill` matching the folder and a folder in `skills/`, `title`, `summary`, `generated` (YYYY-MM-DD), `generated_by`, `setup`; body is the "what changed" note), plus `task.md`, `without.md` and `with.md`. Generate both outputs from the same message in fresh sessions, paste them unedited, and never use someone else's real code without the owner's written OK. Every skill should have one; the validator warns when it doesn't.
 - **Resources**: add entries to `resources/resources.yaml`. Every entry needs `id` (unique, kebab-case), `title`, `url` (https), `category` and `why` (one line on why it matters).
 - **Plugins**: the repo root itself is the main plugin (`nikolovski-lab`) and picks up `skills/` and `agents/` automatically. Extra plugins live in `plugins/<name>/` and must be added to `.claude-plugin/marketplace.json`.
+- **Starter packs**: a marketplace entry with `"source": "./"` and a `skills` list of `./skills/<name>` folders, plus `plugins/<name>/README.md` with the install line and the skills it ships. Never copy a skill into a pack. See `plugins/README.md`.
 
 ## Before you open a PR
 1. `npm run validate` passes.
