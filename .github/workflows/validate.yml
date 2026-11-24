@@ -28,6 +28,9 @@ jobs:
       - name: Validate content (SKILL.md frontmatter, lessons, resources, marketplace)
         run: npm run validate
 
+      - name: Test the MCP server
+        run: npm test
+
       - name: Validate plugin marketplace with Claude Code
         run: npx -y @anthropic-ai/claude-code plugin validate .
 

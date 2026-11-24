@@ -10,11 +10,12 @@ Git is the only source of truth. There is no database. The site in `site/` only 
 - **Agents**: `agents/<name>.md` with frontmatter `name` and `description` (optional `tools`, `model`).
 - **Lessons**: `lessons/YYYY-MM-DD-slug.md` with frontmatter `title`, `date` (YYYY-MM-DD), `summary`, optional `skill` (must match a folder in `skills/`), `tags`, `draft`. Files starting with `_` are templates and are ignored.
 - **Resources**: add entries to `resources/resources.yaml`. Every entry needs `id` (unique, kebab-case), `title`, `url` (https), `category` and `why` (one line on why it matters).
+- **MCP server**: `mcp/` holds the logic, `api/mcp.mjs` is the Vercel Function, `test/` the tests. It only reads `skills/` and `lessons/` and must never serve `draft: true` lessons. Run `npm test` after changing it.
 - **Plugins**: the repo root itself is the main plugin (`nikolovski-lab`) and picks up `skills/` and `agents/` automatically. Extra plugins live in `plugins/<name>/` and must be added to `.claude-plugin/marketplace.json`.
 
 ## Before you open a PR
 1. `npm run validate` passes.
-2. `npm run build` passes if you touched `site/` or content.
+2. `npm run build` passes if you touched `site/` or content; `npm test` passes if you touched `mcp/` or `api/`.
 3. One topic per PR. Explain what changed and why in the description.
 4. Never commit secrets, API keys or private details about other people or their code. Case studies need the repo owner's written OK first.
 
