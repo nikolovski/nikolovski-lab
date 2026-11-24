@@ -11,7 +11,7 @@
 - [x] Add the `improve-prompt` skill
 - [ ] Write the `improve-prompt` lesson
 - [x] Connect Vercel and point nikolovski.ai at it
-- [ ] Turn on the weekly skill review: API key secret is set; still needs the `SKILL_REVIEW_ENABLED` variable set to `true`
+- [x] Turn on the weekly skill review
 
 ## Phase 1
 - [ ] **MCP server**: lets anyone's agent search and pull skills and lessons from this repo (`search_skills`, `get_skill`, `search_lessons`, `get_lesson`). Likely a small read-only server deployed next to the site.
