@@ -6,6 +6,7 @@ import marketplace from "../../../.claude-plugin/marketplace.json";
 
 const skills = (await getCollection("skills")).sort((a, b) => a.id.localeCompare(b.id));
 const agents = (await getCollection("agents")).sort((a, b) => a.id.localeCompare(b.id));
+const demos = new Set((await getCollection("demos")).map((d) => d.data.skill));
 const repo = site.repo;
 const mcpUrl = new URL("/mcp", Astro.site).href;
 const cursorConfig = JSON.stringify({ mcpServers: { "nikolovski-lab": { url: mcpUrl } } }, null, 2);
@@ -58,6 +59,7 @@ const packs = (marketplace.plugins as { name: string; description: string; sourc
       <li class="card" id={s.id}>
         <h3><a href={sourceUrl(`skills/${s.id}/SKILL.md`)}>{s.data.name}</a></h3>
         <p>{s.data.description}</p>
+        {demos.has(s.id) && <p style="margin-top:8px"><a href={`/demos/${s.id}/`}>See it before and after →</a></p>}
         <p class="meta" style="margin-top:8px">Codex</p>
         <pre><code>npx skills add {repo} --skill {s.id} -a codex</code></pre>
         <p class="meta" style="margin-top:8px">Cursor</p>

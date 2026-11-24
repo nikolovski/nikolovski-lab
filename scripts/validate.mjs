@@ -71,6 +71,28 @@ for (const f of mdFiles(join(root, "lessons"))) {
   if (fm.skill != null && !skillNames.has(fm.skill)) err(rel(file), `\`skill\` "${fm.skill}" has no folder in skills/`);
 }
 
+// Demos: demos/<skill>/ holds demo.md (frontmatter + "what changed"), task.md, without.md and with.md
+const demoSkills = new Set();
+for (const d of dirs(join(root, "demos"))) {
+  const at = `demos/${d}`;
+  for (const part of ["demo.md", "task.md", "without.md", "with.md"]) {
+    const f = join(root, "demos", d, part);
+    if (!existsSync(f)) err(at, `missing ${part}`);
+    else if (readFileSync(f, "utf8").trim().length === 0) err(`${at}/${part}`, "must not be empty");
+  }
+  const file = join(root, "demos", d, "demo.md");
+  if (!existsSync(file)) continue;
+  const fm = frontmatter(file);
+  if (!fm) { err(rel(file), "missing YAML frontmatter"); continue; }
+  if (!str(fm.skill)) err(rel(file), "`skill` is required");
+  else if (fm.skill !== d) err(rel(file), `\`skill\` (${fm.skill}) must match its folder (${d})`);
+  else if (!skillNames.has(d)) err(rel(file), `\`skill\` "${d}" has no folder in skills/`);
+  for (const k of ["title", "summary", "generated_by", "setup"]) if (!str(fm[k])) err(rel(file), `\`${k}\` is required`);
+  if (!DATE_RE.test(asDate(fm.generated))) err(rel(file), "`generated` must be YYYY-MM-DD");
+  demoSkills.add(d);
+}
+for (const s of skillNames) if (!demoSkills.has(s)) warn.push(`skill "${s}" has no before/after demo in demos/${s}/`);
+
 // Resources
 const resFile = join(root, "resources", "resources.yaml");
 if (existsSync(resFile)) {
@@ -181,4 +203,4 @@ if (errors.length) {
   for (const e of errors) console.error(`  - ${e}`);
   process.exit(1);
 }
-console.log(`ok: ${skillNames.size} skill(s), ${packNames.size} starter pack(s), content valid`);
+console.log(`ok: ${skillNames.size} skill(s), ${demoSkills.size} demo(s), ${packNames.size} starter pack(s), content valid`);
