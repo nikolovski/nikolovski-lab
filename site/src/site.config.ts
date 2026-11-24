@@ -1,4 +1,3 @@
-// TODO: set `repo` to the GitHub "owner/name" once the repo exists.
 export const site = {
   title: "Nikolovski Lab",
   tagline: "Skills, agents and lessons from building with AI coding agents.",
