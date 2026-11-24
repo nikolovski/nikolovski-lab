@@ -8,6 +8,9 @@ const skills = (await getCollection("skills")).sort((a, b) => a.id.localeCompare
 const agents = (await getCollection("agents")).sort((a, b) => a.id.localeCompare(b.id));
 const demos = new Set((await getCollection("demos")).map((d) => d.data.skill));
 const repo = site.repo;
+const mcpUrl = new URL("/mcp", Astro.site).href;
+const cursorConfig = JSON.stringify({ mcpServers: { "nikolovski-lab": { url: mcpUrl } } }, null, 2);
+const vscodeConfig = JSON.stringify({ name: "nikolovski-lab", type: "http", url: mcpUrl });
 
 // Starter packs are marketplace entries that point at the repo root and list skill folders.
 const packs = (marketplace.plugins as { name: string; description: string; source: string; skills?: string[] }[])
@@ -35,6 +38,20 @@ const packs = (marketplace.plugins as { name: string; description: string; sourc
       </li>
     ))}
   </ul>
+
+  <h2 id="mcp">MCP server: search and pull from any agent</h2>
+  <p>Point your agent at <code>{mcpUrl}</code> and it can search and fetch every skill and published lesson here, no install. Read-only, no sign-in. Tools: <code>search_skills</code>, <code>get_skill</code>, <code>search_lessons</code>, <code>get_lesson</code>.</p>
+  <p class="meta" style="margin-top:8px">Claude Code</p>
+  <pre><code>claude mcp add --transport http nikolovski-lab {mcpUrl}</code></pre>
+  <p class="meta" style="margin-top:8px">Codex CLI</p>
+  <pre><code>codex mcp add nikolovski-lab --url {mcpUrl}</code></pre>
+  <p class="meta" style="margin-top:8px">Cursor (in <code>~/.cursor/mcp.json</code>)</p>
+  <pre><code>{cursorConfig}</code></pre>
+  <p class="meta" style="margin-top:8px">VS Code</p>
+  <pre><code>code --add-mcp '{vscodeConfig}'</code></pre>
+  <p class="meta" style="margin-top:8px">Gemini CLI</p>
+  <pre><code>gemini mcp add --transport http nikolovski-lab {mcpUrl}</code></pre>
+  <p class="meta" style="margin-top:8px">Claude.ai and Claude Desktop: Settings &gt; Connectors &gt; Add custom connector, with the URL above.</p>
 
   <h2>Skills</h2>
   <ul class="list">

@@ -14,7 +14,9 @@ Skills, agents, plugins, lessons and curated resources from my work with AI codi
 | `resources/resources.yaml` | Curated links, each with a line on why it matters |
 | `.claude-plugin/marketplace.json` | Makes this repo a Claude Code plugin marketplace |
 | `site/` | Astro site (Lessons, Toolkit, Demos, Resources), deployed on Vercel |
+| `mcp/`, `api/mcp.mjs` | Read-only MCP server at `nikolovski.ai/mcp` (see below) |
 | `scripts/validate.mjs` | Content checks that CI runs on every PR |
+| `test/` | Tests for the MCP server (`npm test`) |
 
 ## Install
 
@@ -47,6 +49,30 @@ npx skills add nikolovski/nikolovski-lab --skill architecture-review -a cursor
 
 **Manual:** copy `skills/<name>/` into your agent's skills folder (for Claude Code, `~/.claude/skills/<name>/`).
 
+## MCP server
+
+Any agent that speaks MCP can search and pull skills and lessons straight from this repo, without installing anything. Endpoint: `https://nikolovski.ai/mcp` (Streamable HTTP, read-only, no sign-in).
+
+| Tool | What it does |
+| --- | --- |
+| `search_skills` | Keyword search over skills; an empty query lists them all |
+| `get_skill` | Full `SKILL.md` by name, plus any supporting file with `file` |
+| `search_lessons` | Keyword search over published lessons; drafts are never served |
+| `get_lesson` | Full lesson by id |
+
+Add it:
+
+```
+claude mcp add --transport http nikolovski-lab https://nikolovski.ai/mcp          # Claude Code
+codex mcp add nikolovski-lab --url https://nikolovski.ai/mcp                      # Codex CLI
+gemini mcp add --transport http nikolovski-lab https://nikolovski.ai/mcp          # Gemini CLI
+code --add-mcp '{"name":"nikolovski-lab","type":"http","url":"https://nikolovski.ai/mcp"}'   # VS Code
+```
+
+**Cursor:** add `"nikolovski-lab": { "url": "https://nikolovski.ai/mcp" }` under `mcpServers` in `~/.cursor/mcp.json`. **Claude.ai and Claude Desktop:** Settings > Connectors > Add custom connector, with the same URL.
+
+How it works: `api/mcp.mjs` is a Vercel Function next to the static site; `vercel.json` routes `/mcp` to it and ships `skills/` and `lessons/` with it. Content is indexed once per cold start, so it always matches the last deploy. Each request gets a fresh, stateless server.
+
 ## Skills
 
 | Skill | What it does |
@@ -59,6 +85,9 @@ npx skills add nikolovski/nikolovski-lab --skill architecture-review -a cursor
 ```
 npm install            # installs root tooling and the site (npm workspaces)
 npm run validate       # checks frontmatter, YAML and JSON
+npm test               # MCP server tests
+npm run mcp:dev        # MCP server at http://localhost:3333/mcp
+npm run mcp:smoke -- https://nikolovski.ai/mcp   # smoke-test any deployment
 npm run dev            # site at http://localhost:4321
 npm run build          # validate + production build into site/dist
 ```
