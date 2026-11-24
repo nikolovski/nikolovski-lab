@@ -16,7 +16,7 @@
 ## Phase 1
 - [x] **MCP server**: lets anyone's agent search and pull skills and lessons from this repo (`search_skills`, `get_skill`, `search_lessons`, `get_lesson`). Read-only, at `https://nikolovski.ai/mcp`, deployed next to the site.
 - [ ] **Before/after demos**: one per skill, showing the agent's output without and with the skill.
-- [ ] **Starter packs**: one-command bundles as extra plugins under `plugins/`, for example:
+- [x] **Starter packs**: one-command bundles as extra plugins under `plugins/`, for example:
   - `solo-saas-founder`
   - `code-reviewer`
 
