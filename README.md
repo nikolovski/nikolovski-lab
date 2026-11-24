@@ -8,7 +8,7 @@ Skills, agents, plugins, lessons and curated resources from my work with AI codi
 | --- | --- |
 | `skills/<name>/SKILL.md` | Agent Skills (Claude Code, Codex, Cursor and any agent that reads `SKILL.md`) |
 | `agents/*.md` | Subagent definitions |
-| `plugins/<name>/` | Extra Claude Code plugins, such as starter packs (see `plugins/README.md`) |
+| `plugins/<name>/` | Starter packs and extra Claude Code plugins (see `plugins/README.md`) |
 | `lessons/YYYY-MM-DD-slug.md` | Dated write-ups; each links the skill it produced |
 | `resources/resources.yaml` | Curated links, each with a line on why it matters |
 | `.claude-plugin/marketplace.json` | Makes this repo a Claude Code plugin marketplace |
@@ -17,20 +17,31 @@ Skills, agents, plugins, lessons and curated resources from my work with AI codi
 
 ## Install
 
-Replace `OWNER` with the GitHub account that hosts this repo.
-
 **Claude Code** (all skills and agents as one plugin):
 
 ```
-/plugin marketplace add OWNER/nikolovski-lab
+/plugin marketplace add nikolovski/nikolovski-lab
 /plugin install nikolovski-lab@nikolovski-lab
 ```
+
+**Claude Code starter packs** (a smaller bundle for one kind of work):
+
+```
+/plugin marketplace add nikolovski/nikolovski-lab
+/plugin install solo-saas-founder@nikolovski-lab
+/plugin install code-reviewer@nikolovski-lab
+```
+
+| Pack | Skills |
+| --- | --- |
+| [solo-saas-founder](plugins/solo-saas-founder/README.md) | architecture-review, improve-prompt |
+| [code-reviewer](plugins/code-reviewer/README.md) | architecture-review |
 
 **Codex, Cursor and other agents** (one skill, via the open [skills CLI](https://github.com/vercel-labs/skills)):
 
 ```
-npx skills add OWNER/nikolovski-lab --skill architecture-review -a codex
-npx skills add OWNER/nikolovski-lab --skill architecture-review -a cursor
+npx skills add nikolovski/nikolovski-lab --skill architecture-review -a codex
+npx skills add nikolovski/nikolovski-lab --skill architecture-review -a cursor
 ```
 
 **Manual:** copy `skills/<name>/` into your agent's skills folder (for Claude Code, `~/.claude/skills/<name>/`).

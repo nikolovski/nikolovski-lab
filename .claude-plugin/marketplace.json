@@ -17,6 +17,39 @@
         "prompt-engineering",
         "skills"
       ]
+    },
+    {
+      "name": "solo-saas-founder",
+      "source": "./",
+      "description": "Starter pack for a solo founder building a SaaS: architecture reviews of your own system and sharper prompts for every AI tool you use.",
+      "homepage": "https://nikolovski.ai/toolkit/#solo-saas-founder",
+      "license": "MIT",
+      "keywords": [
+        "starter-pack",
+        "saas",
+        "founder",
+        "architecture",
+        "prompt-engineering"
+      ],
+      "skills": [
+        "./skills/architecture-review",
+        "./skills/improve-prompt"
+      ]
+    },
+    {
+      "name": "code-reviewer",
+      "source": "./",
+      "description": "Starter pack for reviewing code and systems: an evidence-based architecture review with a scorecard, ranked findings and a roadmap.",
+      "homepage": "https://nikolovski.ai/toolkit/#code-reviewer",
+      "license": "MIT",
+      "keywords": [
+        "starter-pack",
+        "code-review",
+        "architecture"
+      ],
+      "skills": [
+        "./skills/architecture-review"
+      ]
     }
   ]
 }
