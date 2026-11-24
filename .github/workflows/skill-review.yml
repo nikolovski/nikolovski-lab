@@ -8,7 +8,8 @@
 # variables > Actions > Secrets). Each run uses API credits.
 #
 # Also enable: Settings > Actions > General > Workflow permissions >
-# "Allow GitHub Actions to create and approve pull requests".
+# "Allow GitHub Actions to create and approve pull requests". Without it the
+# branch is pushed but the PR step fails. Open the PR from that branch by hand.
 #
 # Claude reads public web pages here, so treat what it produces as untrusted:
 #   pick     no AI. Chooses the skills.
@@ -81,7 +82,8 @@ jobs:
             name=$(basename "$(dirname "$f")")
             # Same rule as scripts/validate.mjs. Names end up in paths and branches.
             [[ "$name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || continue
-            if grep -qE "^skill-review/$name-[0-9]+$" <<< "$open"; then
+            # Branches are skill-review/<skill>-<run id>-<attempt>. Older ones lack -<attempt>.
+            if grep -qE "^skill-review/$name-[0-9]+(-[0-9]+)?$" <<< "$open"; then
               echo "Skipping $name: it already has an open review PR"
               continue
             fi
@@ -241,7 +243,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SKILL: ${{ matrix.skill }}
-          BRANCH: skill-review/${{ matrix.skill }}-${{ github.run_id }}
+          # run_attempt keeps a re-run from pushing to the branch an earlier
+          # attempt already pushed, which git rejects as "fetch first".
+          BRANCH: skill-review/${{ matrix.skill }}-${{ github.run_id }}-${{ github.run_attempt }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           git config user.name 'github-actions[bot]'
