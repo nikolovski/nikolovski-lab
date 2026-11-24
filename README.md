@@ -9,10 +9,11 @@ Skills, agents, plugins, lessons and curated resources from my work with AI codi
 | `skills/<name>/SKILL.md` | Agent Skills (Claude Code, Codex, Cursor and any agent that reads `SKILL.md`) |
 | `agents/*.md` | Subagent definitions |
 | `plugins/<name>/` | Extra Claude Code plugins, such as starter packs (see `plugins/README.md`) |
+| `demos/<skill>/` | Before/after demos: the same task without and with each skill |
 | `lessons/YYYY-MM-DD-slug.md` | Dated write-ups; each links the skill it produced |
 | `resources/resources.yaml` | Curated links, each with a line on why it matters |
 | `.claude-plugin/marketplace.json` | Makes this repo a Claude Code plugin marketplace |
-| `site/` | Astro site (Lessons, Toolkit, Resources), deployed on Vercel |
+| `site/` | Astro site (Lessons, Toolkit, Demos, Resources), deployed on Vercel |
 | `scripts/validate.mjs` | Content checks that CI runs on every PR |
 
 ## Install

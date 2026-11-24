@@ -4,13 +4,16 @@ import { site, repoUrl } from "../site.config";
 interface Props {
   title?: string;
   description?: string;
+  /** Wider main column, for side-by-side content such as demos. */
+  wide?: boolean;
 }
-const { title, description = site.tagline } = Astro.props;
+const { title, description = site.tagline, wide = false } = Astro.props;
 const pageTitle = title ? `${title} | ${site.title}` : site.title;
 const path = Astro.url.pathname;
 const nav = [
   { href: "/lessons/", label: "Lessons" },
   { href: "/toolkit/", label: "Toolkit" },
+  { href: "/demos/", label: "Demos" },
   { href: "/resources/", label: "Resources" },
 ];
 ---
@@ -34,7 +37,7 @@ const nav = [
         <a href={repoUrl}>GitHub</a>
       </nav>
     </header>
-    <main class="wrap">
+    <main class:list={["wrap", { wide }]}>
       <slot />
     </main>
     <footer class="wrap">
@@ -83,6 +86,7 @@ const nav = [
   nav a { color: var(--muted); text-decoration: none; }
   nav a[aria-current="page"], nav a:hover { color: var(--fg); }
   main.wrap { padding-top: 32px; padding-bottom: 48px; }
+  main.wrap.wide { max-width: 1200px; }
   footer.wrap { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; padding-top: 16px; padding-bottom: 32px; }
   a { color: var(--accent); }
   h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; }
@@ -99,4 +103,8 @@ const nav = [
   :not(pre) > code { background: var(--code); padding: 1px 5px; border-radius: 4px; }
   .tag { display: inline-block; font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; margin-right: 4px; }
   .prose img { max-width: 100%; }
+  .prose table { display: block; overflow-x: auto; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  .prose th, .prose td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+  .prose th { background: var(--code); }
+  .prose blockquote { margin: 12px 0; padding: 0 12px; border-left: 3px solid var(--line); color: var(--muted); }
 </style>

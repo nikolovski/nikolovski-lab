@@ -1,0 +1,24 @@
+---
+import Base from "../../layouts/Base.astro";
+import { allDemos } from "../../lib/demos";
+import { formatDate } from "../../lib/lessons";
+
+const demos = await allDemos();
+---
+<Base title="Demos" description="Each skill shown on the same task, without and with the skill.">
+  <h1>Demos</h1>
+  <p class="lede">The same task given to the agent twice: once plain, once with the skill loaded.</p>
+  {demos.length === 0 ? (
+    <p class="muted">No demos yet.</p>
+  ) : (
+    <ul class="list">
+      {demos.map((d) => (
+        <li class="card">
+          <h3><a href={`/demos/${d.id}/`}>{d.data.title}</a></h3>
+          <p class="meta">skill: <a href={`/toolkit/#${d.data.skill}`}>{d.data.skill}</a> · generated {formatDate(d.data.generated)}</p>
+          <p>{d.data.summary}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>
