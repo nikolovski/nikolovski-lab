@@ -1,0 +1,16 @@
+{
+  "name": "nikolovski-lab",
+  "description": "Every skill and agent in the Nikolovski Lab, including architecture-review and improve-prompt.",
+  "author": {
+    "name": "Martino Nikolovski"
+  },
+  "homepage": "https://nikolovski.ai",
+  "repository": "https://github.com/nikolovski/nikolovski-lab",
+  "license": "MIT",
+  "keywords": [
+    "architecture",
+    "code-review",
+    "prompt-engineering",
+    "skills"
+  ]
+}

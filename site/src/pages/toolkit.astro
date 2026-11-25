@@ -3,6 +3,8 @@ import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { site, sourceUrl } from "../site.config";
 import marketplace from "../../../.claude-plugin/marketplace.json";
+import { existsSync, readdirSync } from "node:fs";
+import { resolve } from "node:path";
 
 const skills = (await getCollection("skills")).sort((a, b) => a.id.localeCompare(b.id));
 const agents = (await getCollection("agents")).sort((a, b) => a.id.localeCompare(b.id));
@@ -12,10 +14,17 @@ const mcpUrl = new URL("/mcp", Astro.site).href;
 const cursorConfig = JSON.stringify({ mcpServers: { "nikolovski-lab": { url: mcpUrl } } }, null, 2);
 const vscodeConfig = JSON.stringify({ name: "nikolovski-lab", type: "http", url: mcpUrl });
 
-// Starter packs are marketplace entries that point at the repo root and list skill folders.
-const packs = (marketplace.plugins as { name: string; description: string; source: string; skills?: string[] }[])
-  .filter((p) => p.source === "./" && Array.isArray(p.skills))
-  .map((p) => ({ ...p, skillIds: p.skills!.map((s) => s.replace(/^\.\/skills\//, "").replace(/\/$/, "")) }));
+// Starter packs are the marketplace plugins other than the main one. Each ships
+// copies of skills from skills/ in plugins/<name>/skills/ (see plugins/README.md).
+const skillIdSet = new Set(skills.map((s) => s.id));
+const pluginSkills = (name: string) => {
+  const dir = resolve(process.cwd(), "../plugins", name, "skills");
+  return existsSync(dir) ? readdirSync(dir).filter((d) => skillIdSet.has(d)).sort() : [];
+};
+const packs = (marketplace.plugins as { name: string; description: string; source: string }[])
+  .filter((p) => p.name !== marketplace.name && p.source === `./plugins/${p.name}`)
+  .map((p) => ({ ...p, skillIds: pluginSkills(p.name) }))
+  .filter((p) => p.skillIds.length > 0);
 ---
 <Base title="Toolkit" description="Skills, starter packs and agents with one-line installs.">
   <h1>Toolkit</h1>
@@ -24,6 +33,7 @@ const packs = (marketplace.plugins as { name: string; description: string; sourc
   <h2>Claude Code: everything</h2>
   <pre><code>/plugin marketplace add {repo}
 /plugin install nikolovski-lab@nikolovski-lab</code></pre>
+  <p class="muted">In the Claude app (claude.ai, Claude Desktop), add <code>{repo}</code> as a plugin marketplace, then install <code>nikolovski-lab</code> or a starter pack.</p>
 
   <h2>Claude Code: starter packs</h2>
   <p class="muted">A smaller bundle for one kind of work. Add the marketplace once, then install a pack.</p>
