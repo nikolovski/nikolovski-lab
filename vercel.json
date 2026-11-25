@@ -6,7 +6,7 @@
   "outputDirectory": "site/dist",
   "functions": {
     "api/mcp.mjs": {
-      "includeFiles": "{skills,lessons}/**",
+      "includeFiles": "{plugins/nikolovski-lab/skills,lessons}/**",
       "maxDuration": 10
     }
   },

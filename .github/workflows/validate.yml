@@ -34,5 +34,12 @@ jobs:
       - name: Validate plugin marketplace with Claude Code
         run: npx -y @anthropic-ai/claude-code plugin validate .
 
+      - name: Build the starter packs and validate each one with Claude Code
+        run: |
+          npm run build:packs
+          for pack in dist/packs/plugins/*/; do
+            npx -y @anthropic-ai/claude-code plugin validate "$pack"
+          done
+
       - name: Build site
         run: npm run build -w site

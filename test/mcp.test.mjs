@@ -7,7 +7,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { loadContent, searchSkills, searchLessons, findLesson, findSkill, readSkillFile } from "../mcp/content.mjs";
+import { SKILLS_DIR, loadContent, searchSkills, searchLessons, findLesson, findSkill, readSkillFile } from "../mcp/content.mjs";
 import { serve } from "../scripts/mcp-dev.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -18,9 +18,9 @@ const put = (path, text) => {
   mkdirSync(dirname(join(root, path)), { recursive: true });
   writeFileSync(join(root, path), text);
 };
-put("skills/alpha-review/SKILL.md", '---\nname: "alpha-review"\ndescription: "Reviews database schemas for indexing problems."\n---\n\n# Alpha\nCheck every foreign key.\n');
-put("skills/alpha-review/references/checklist.md", "# Checklist\n- indexes\n");
-put("skills/beta-writer/SKILL.md", "---\nname: beta-writer\ndescription: Writes release notes.\n---\n\n# Beta\nMentions schemas once.\n");
+put("plugins/nikolovski-lab/skills/alpha-review/SKILL.md", '---\nname: "alpha-review"\ndescription: "Reviews database schemas for indexing problems."\n---\n\n# Alpha\nCheck every foreign key.\n');
+put("plugins/nikolovski-lab/skills/alpha-review/references/checklist.md", "# Checklist\n- indexes\n");
+put("plugins/nikolovski-lab/skills/beta-writer/SKILL.md", "---\nname: beta-writer\ndescription: Writes release notes.\n---\n\n# Beta\nMentions schemas once.\n");
 put("lessons/2026-01-01-indexes.md", "---\ntitle: What indexes taught me\ndate: 2026-01-01\nsummary: Foreign keys need indexes.\nskill: alpha-review\ntags: [database]\n---\n\nThe body of the published lesson.\n");
 put("lessons/2026-01-02-secret.md", "---\ntitle: Secret plans\ndate: 2026-01-02\nsummary: Not ready.\ndraft: true\n---\n\nUnreleased secret body.\n");
 put("lessons/_template.md", "---\ntitle: Template\ndate: 2026-01-01\nsummary: x\n---\n");
@@ -57,7 +57,7 @@ test("skill files are limited to the skill's own folder", () => {
 
 test("the real repo loads every skill and hides every draft lesson", () => {
   const real = loadContent(repoRoot);
-  const skillDirs = readdirSync(join(repoRoot, "skills")).sort();
+  const skillDirs = readdirSync(join(repoRoot, SKILLS_DIR)).sort();
   assert.deepEqual(real.skills.map((s) => s.name), skillDirs);
   for (const f of readdirSync(join(repoRoot, "lessons")).filter((f) => /^\d{4}.*\.md$/.test(f))) {
     const isDraft = /^draft:\s*true\s*$/m.test(readFileSync(join(repoRoot, "lessons", f), "utf8").split(/\n---/)[0]);

@@ -1,0 +1,83 @@
+# Builds the starter packs and publishes them to the `packs` branch.
+#
+# Every skill lives once on main, in plugins/nikolovski-lab/skills/. A starter pack
+# ships a subset of them, and the Claude app (claude.ai, Claude Desktop, Cowork) needs
+# real files inside each plugin folder: it drops symlinks and ignores plugin
+# dependencies. So this job copies each pack's skills into plugins/<pack>/skills/ on
+# the `packs` branch, where the marketplace entries of the packs point.
+#
+# No AI runs here. It commits only when the built tree changed, so a pack's version
+# (the commit it was installed from) moves only when its content does.
+
+name: Publish starter packs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/**"
+      - "scripts/build-packs.mjs"
+      - "scripts/lib/packs.mjs"
+      - ".claude-plugin/marketplace.json"
+      - ".github/workflows/publish-packs.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: publish-packs
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Validate and build the packs
+        run: |
+          npm ci --ignore-scripts
+          npm run validate
+          npm run build:packs -- --out "$RUNNER_TEMP/packs"
+
+      - name: Publish to the packs branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: packs
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          auth=(-c credential.helper= -c credential.helper='!gh auth git-credential')
+          tree="$RUNNER_TEMP/branch"
+          if git "${auth[@]}" fetch --depth 1 origin "refs/heads/$BRANCH" 2>/dev/null; then
+            git worktree add --detach "$tree" FETCH_HEAD
+          else
+            # First run: start the branch with no history of its own.
+            git worktree add --detach "$tree"
+            git -C "$tree" switch --orphan "$BRANCH"
+          fi
+          # Replace the whole tree with the fresh build, so removed packs and skills go too.
+          git -C "$tree" rm -rq --ignore-unmatch .
+          cp -R "$RUNNER_TEMP/packs/." "$tree/"
+          git -C "$tree" add -A
+          if git -C "$tree" diff --cached --quiet; then
+            echo "The packs branch is already up to date"
+            exit 0
+          fi
+          git -C "$tree" commit -m "Build starter packs from ${GITHUB_SHA::12}"
+          git -C "$tree" "${auth[@]}" push origin "HEAD:refs/heads/$BRANCH"

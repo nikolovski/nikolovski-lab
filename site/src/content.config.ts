@@ -1,4 +1,5 @@
 // Content lives at the repo root, one level above site/. Git is the source of truth.
+// Skills and agents live in the main plugin's folder, their only home (see plugins/README.md).
 import { defineCollection } from "astro:content";
 import { glob, file } from "astro/loaders";
 import { z } from "astro/zod";
@@ -6,7 +7,7 @@ import { z } from "astro/zod";
 const skills = defineCollection({
   loader: glob({
     pattern: "*/SKILL.md",
-    base: "../skills",
+    base: "../plugins/nikolovski-lab/skills",
     generateId: ({ entry }) => entry.split("/")[0],
   }),
   schema: z.object({
@@ -16,7 +17,7 @@ const skills = defineCollection({
 });
 
 const agents = defineCollection({
-  loader: glob({ pattern: ["*.md", "!README.md", "!_*.md"], base: "../agents" }),
+  loader: glob({ pattern: ["*.md", "!README.md", "!_*.md"], base: "../plugins/nikolovski-lab/agents" }),
   schema: z.object({
     name: z.string(),
     description: z.string(),
