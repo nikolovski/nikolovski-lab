@@ -6,6 +6,7 @@
   "engines": { "node": ">=22.12" },
   "scripts": {
     "validate": "node scripts/validate.mjs",
+    "sync:plugins": "node scripts/sync-plugins.mjs",
     "test": "node --test test/*.test.mjs",
     "mcp:dev": "node scripts/mcp-dev.mjs",
     "mcp:smoke": "node scripts/mcp-smoke.mjs",

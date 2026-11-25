@@ -8,14 +8,15 @@ Skills, agents, plugins, lessons and curated resources from my work with AI codi
 | --- | --- |
 | `skills/<name>/SKILL.md` | Agent Skills (Claude Code, Codex, Cursor and any agent that reads `SKILL.md`) |
 | `agents/*.md` | Subagent definitions |
-| `plugins/<name>/` | Starter packs and extra Claude Code plugins (see `plugins/README.md`) |
+| `plugins/<name>/` | The plugins: the main one and the starter packs, with generated copies of their skills (see `plugins/README.md`) |
 | `demos/<skill>/` | Before/after demos: the same task without and with each skill |
 | `lessons/YYYY-MM-DD-slug.md` | Dated write-ups; each links the skill it produced |
 | `resources/resources.yaml` | Curated links, each with a line on why it matters |
-| `.claude-plugin/marketplace.json` | Makes this repo a Claude Code plugin marketplace |
+| `.claude-plugin/marketplace.json` | Makes this repo a plugin marketplace for Claude Code and the Claude app |
 | `site/` | Astro site (Lessons, Toolkit, Demos, Resources), deployed on Vercel |
 | `mcp/`, `api/mcp.mjs` | Read-only MCP server at `nikolovski.ai/mcp` (see below) |
 | `scripts/validate.mjs` | Content checks that CI runs on every PR |
+| `scripts/sync-plugins.mjs` | Refreshes the skill copies in `plugins/` (`npm run sync:plugins`) |
 | `test/` | Tests for the MCP server (`npm test`) |
 
 ## Install
@@ -39,6 +40,8 @@ Skills, agents, plugins, lessons and curated resources from my work with AI codi
 | --- | --- |
 | [solo-saas-founder](plugins/solo-saas-founder/README.md) | architecture-review, improve-prompt |
 | [code-reviewer](plugins/code-reviewer/README.md) | architecture-review |
+
+**Claude app** (claude.ai, Claude Desktop): add `nikolovski/nikolovski-lab` as a plugin marketplace, then install `nikolovski-lab` or a starter pack.
 
 **Codex, Cursor and other agents** (one skill, via the open [skills CLI](https://github.com/vercel-labs/skills)):
 

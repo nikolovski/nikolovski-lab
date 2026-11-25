@@ -14,7 +14,7 @@
 # Claude reads public web pages here, so treat what it produces as untrusted:
 #   pick     no AI. Chooses the skills.
 #   review   runs Claude. Read-only token, no shell, edits limited to one skill.
-#   publish  no AI. Checks the patch, validates it, opens a draft PR.
+#   publish  no AI. Checks the patch, syncs plugin copies, validates, opens a draft PR.
 # Only publish can write to the repo. Don't give review a write token or Bash.
 #
 # Note: PRs opened with the default GITHUB_TOKEN don't trigger other
@@ -232,10 +232,14 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
-      - name: Validate with the scripts from main
+      - name: Refresh the plugin copies and validate, with the scripts from main
         if: steps.check.outputs.changed == 'true'
         run: |
           npm ci --ignore-scripts
+          # plugins/*/skills holds generated copies of skills/. Refresh them from the
+          # checked patch so they ship the same edit. No AI runs in this job.
+          npm run sync:plugins
+          git add -A plugins
           npm run validate
 
       - name: Open a draft PR

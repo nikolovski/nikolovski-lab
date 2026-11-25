@@ -1,0 +1,15 @@
+{
+  "name": "code-reviewer",
+  "description": "Starter pack for reviewing code and systems: an evidence-based architecture review with a scorecard, ranked findings and a roadmap.",
+  "author": {
+    "name": "Martino Nikolovski"
+  },
+  "homepage": "https://nikolovski.ai/toolkit/#code-reviewer",
+  "repository": "https://github.com/nikolovski/nikolovski-lab",
+  "license": "MIT",
+  "keywords": [
+    "starter-pack",
+    "code-review",
+    "architecture"
+  ]
+}
