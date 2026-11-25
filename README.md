@@ -6,9 +6,9 @@ Skills, agents, plugins, lessons and curated resources from my work with AI codi
 
 | Folder | What it holds |
 | --- | --- |
-| `skills/<name>/SKILL.md` | Agent Skills (Claude Code, Codex, Cursor and any agent that reads `SKILL.md`) |
-| `agents/*.md` | Subagent definitions |
-| `plugins/<name>/` | The plugins: the main one and the starter packs, with generated copies of their skills (see `plugins/README.md`) |
+| `plugins/nikolovski-lab/skills/<name>/SKILL.md` | Agent Skills (Claude Code, Codex, Cursor and any agent that reads `SKILL.md`). The main plugin's folder is their only home |
+| `plugins/nikolovski-lab/agents/*.md` | Subagent definitions |
+| `plugins/<pack>/` | Starter packs: a manifest, a README and a `pack.json` naming the skills they ship. CI builds them onto the `packs` branch (see `plugins/README.md`) |
 | `demos/<skill>/` | Before/after demos: the same task without and with each skill |
 | `lessons/YYYY-MM-DD-slug.md` | Dated write-ups; each links the skill it produced |
 | `resources/resources.yaml` | Curated links, each with a line on why it matters |
@@ -16,7 +16,7 @@ Skills, agents, plugins, lessons and curated resources from my work with AI codi
 | `site/` | Astro site (Lessons, Toolkit, Demos, Resources), deployed on Vercel |
 | `mcp/`, `api/mcp.mjs` | Read-only MCP server at `nikolovski.ai/mcp` (see below) |
 | `scripts/validate.mjs` | Content checks that CI runs on every PR |
-| `scripts/sync-plugins.mjs` | Refreshes the skill copies in `plugins/` (`npm run sync:plugins`) |
+| `scripts/build-packs.mjs` | Builds the starter packs the way CI publishes them (`npm run build:packs`) |
 | `test/` | Tests for the MCP server (`npm test`) |
 
 ## Install
@@ -50,7 +50,7 @@ npx skills add nikolovski/nikolovski-lab --skill architecture-review -a codex
 npx skills add nikolovski/nikolovski-lab --skill architecture-review -a cursor
 ```
 
-**Manual:** copy `skills/<name>/` into your agent's skills folder (for Claude Code, `~/.claude/skills/<name>/`).
+**Manual:** copy `plugins/nikolovski-lab/skills/<name>/` into your agent's skills folder (for Claude Code, `~/.claude/skills/<name>/`).
 
 ## MCP server
 
@@ -74,14 +74,14 @@ code --add-mcp '{"name":"nikolovski-lab","type":"http","url":"https://nikolovski
 
 **Cursor:** add `"nikolovski-lab": { "url": "https://nikolovski.ai/mcp" }` under `mcpServers` in `~/.cursor/mcp.json`. **Claude.ai and Claude Desktop:** Settings > Connectors > Add custom connector, with the same URL.
 
-How it works: `api/mcp.mjs` is a Vercel Function next to the static site; `vercel.json` routes `/mcp` to it and ships `skills/` and `lessons/` with it. Content is indexed once per cold start, so it always matches the last deploy. Each request gets a fresh, stateless server.
+How it works: `api/mcp.mjs` is a Vercel Function next to the static site; `vercel.json` routes `/mcp` to it and ships `plugins/nikolovski-lab/skills/` and `lessons/` with it. Content is indexed once per cold start, so it always matches the last deploy. Each request gets a fresh, stateless server.
 
 ## Skills
 
 | Skill | What it does |
 | --- | --- |
-| [architecture-review](skills/architecture-review/SKILL.md) | Evidence-based architecture review. Outputs a scorecard, ranked findings and a roadmap. |
-| [improve-prompt](skills/improve-prompt/SKILL.md) | Rewrites a rough prompt for any AI tool. Asks first, states assumptions, hands the prompt back for your OK. |
+| [architecture-review](plugins/nikolovski-lab/skills/architecture-review/SKILL.md) | Evidence-based architecture review. Outputs a scorecard, ranked findings and a roadmap. |
+| [improve-prompt](plugins/nikolovski-lab/skills/improve-prompt/SKILL.md) | Rewrites a rough prompt for any AI tool. Asks first, states assumptions, hands the prompt back for your OK. |
 
 ## Working on the repo
 
@@ -95,7 +95,7 @@ npm run dev            # site at http://localhost:4321
 npm run build          # validate + production build into site/dist
 ```
 
-Flow: branch, change, open a PR. CI validates content and builds the site; merging to `main` auto-deploys through Vercel. Cut a release by pushing a tag like `v0.1.0`; the release workflow writes the notes.
+Flow: branch, change, open a PR. CI validates content and builds the site; merging to `main` auto-deploys through Vercel and rebuilds the starter packs on the `packs` branch. Cut a release by pushing a tag like `v0.1.0`; the release workflow writes the notes.
 
 First-time setup (push, Vercel, domain, weekly review) is in [SETUP.md](SETUP.md). Conventions for humans and agents are in [AGENTS.md](AGENTS.md). Plans are in [ROADMAP.md](ROADMAP.md).
 

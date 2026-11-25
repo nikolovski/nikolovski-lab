@@ -20,7 +20,12 @@
     },
     {
       "name": "solo-saas-founder",
-      "source": "./plugins/solo-saas-founder",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/nikolovski/nikolovski-lab.git",
+        "path": "plugins/solo-saas-founder",
+        "ref": "packs"
+      },
       "description": "Starter pack for a solo founder building a SaaS: architecture reviews of your own system and sharper prompts for every AI tool you use.",
       "homepage": "https://nikolovski.ai/toolkit/#solo-saas-founder",
       "license": "MIT",
@@ -34,7 +39,12 @@
     },
     {
       "name": "code-reviewer",
-      "source": "./plugins/code-reviewer",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/nikolovski/nikolovski-lab.git",
+        "path": "plugins/code-reviewer",
+        "ref": "packs"
+      },
       "description": "Starter pack for reviewing code and systems: an evidence-based architecture review with a scorecard, ranked findings and a roadmap.",
       "homepage": "https://nikolovski.ai/toolkit/#code-reviewer",
       "license": "MIT",

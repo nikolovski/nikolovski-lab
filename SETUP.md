@@ -20,4 +20,5 @@
    - Keep at least one required approval on `main`, so the workflow cannot merge its own PRs.
    - Claude can fetch only the sites listed in `.github/workflows/skill-review.yml`, plus its built-in documentation sites. When a skill cites a new site, add it there.
    - Try it from the Actions tab (Run workflow). To run it every Monday, add the repo variable `SKILL_REVIEW_ENABLED` = `true`.
-8. **Install it yourself** in Claude Code to check: `/plugin marketplace add OWNER/nikolovski-lab`, then `/plugin install nikolovski-lab@nikolovski-lab`.
+8. **Starter packs:** `.github/workflows/publish-packs.yml` builds the packs onto the `packs` branch on every merge that touches `plugins/`. Nothing to configure. Don't delete that branch or add a protection rule that blocks `github-actions[bot]` from pushing to it. To rebuild by hand, run the workflow from the Actions tab.
+9. **Install it yourself** in Claude Code to check: `/plugin marketplace add OWNER/nikolovski-lab`, then `/plugin install nikolovski-lab@nikolovski-lab`.

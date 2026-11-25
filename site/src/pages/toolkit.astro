@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { site, sourceUrl } from "../site.config";
 import marketplace from "../../../.claude-plugin/marketplace.json";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const skills = (await getCollection("skills")).sort((a, b) => a.id.localeCompare(b.id));
@@ -14,16 +14,17 @@ const mcpUrl = new URL("/mcp", Astro.site).href;
 const cursorConfig = JSON.stringify({ mcpServers: { "nikolovski-lab": { url: mcpUrl } } }, null, 2);
 const vscodeConfig = JSON.stringify({ name: "nikolovski-lab", type: "http", url: mcpUrl });
 
-// Starter packs are the marketplace plugins other than the main one. Each ships
-// copies of skills from skills/ in plugins/<name>/skills/ (see plugins/README.md).
+// Starter packs are the plugins with a pack.json, which lists the skills they ship.
+// The skills themselves live once, in the main plugin (see plugins/README.md).
 const skillIdSet = new Set(skills.map((s) => s.id));
-const pluginSkills = (name: string) => {
-  const dir = resolve(process.cwd(), "../plugins", name, "skills");
-  return existsSync(dir) ? readdirSync(dir).filter((d) => skillIdSet.has(d)).sort() : [];
+const packSkills = (name: string): string[] => {
+  const file = resolve(process.cwd(), "../plugins", name, "pack.json");
+  if (!existsSync(file)) return [];
+  return (JSON.parse(readFileSync(file, "utf8")).skills as string[]).filter((id) => skillIdSet.has(id)).sort();
 };
-const packs = (marketplace.plugins as { name: string; description: string; source: string }[])
-  .filter((p) => p.name !== marketplace.name && p.source === `./plugins/${p.name}`)
-  .map((p) => ({ ...p, skillIds: pluginSkills(p.name) }))
+const packs = (marketplace.plugins as { name: string; description: string }[])
+  .filter((p) => p.name !== marketplace.name)
+  .map((p) => ({ ...p, skillIds: packSkills(p.name) }))
   .filter((p) => p.skillIds.length > 0);
 ---
 <Base title="Toolkit" description="Skills, starter packs and agents with one-line installs.">
@@ -67,7 +68,7 @@ const packs = (marketplace.plugins as { name: string; description: string; sourc
   <ul class="list">
     {skills.map((s) => (
       <li class="card" id={s.id}>
-        <h3><a href={sourceUrl(`skills/${s.id}/SKILL.md`)}>{s.data.name}</a></h3>
+        <h3><a href={sourceUrl(`plugins/${marketplace.name}/skills/${s.id}/SKILL.md`)}>{s.data.name}</a></h3>
         <p>{s.data.description}</p>
         {demos.has(s.id) && <p style="margin-top:8px"><a href={`/demos/${s.id}/`}>See it before and after →</a></p>}
         <p class="meta" style="margin-top:8px">Codex</p>
@@ -87,7 +88,7 @@ const packs = (marketplace.plugins as { name: string; description: string; sourc
     <ul class="list">
       {agents.map((a) => (
         <li class="card">
-          <h3><a href={sourceUrl(`agents/${a.id}.md`)}>{a.data.name}</a></h3>
+          <h3><a href={sourceUrl(`plugins/${marketplace.name}/agents/${a.id}.md`)}>{a.data.name}</a></h3>
           <p>{a.data.description}</p>
         </li>
       ))}

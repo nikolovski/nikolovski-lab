@@ -7,6 +7,8 @@ import { parse as parseYaml } from "yaml";
 export const SITE_URL = "https://nikolovski.ai";
 export const REPO = "nikolovski/nikolovski-lab";
 export const BRANCH = "main";
+// Skills live in the main plugin's folder, their only home in the repo (see plugins/README.md).
+export const SKILLS_DIR = "plugins/nikolovski-lab/skills";
 const blobUrl = (path) => `https://github.com/${REPO}/blob/${BRANCH}/${path}`;
 const rawUrl = (path) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`;
 
@@ -40,13 +42,13 @@ const asDate = (v) => (v instanceof Date ? v.toISOString().slice(0, 10) : String
 /** Loads every skill and every non-draft lesson under `root`. */
 export function loadContent(root) {
   const skills = [];
-  for (const d of dirs(join(root, "skills")).sort()) {
-    const dir = join(root, "skills", d);
+  for (const d of dirs(join(root, SKILLS_DIR)).sort()) {
+    const dir = join(root, SKILLS_DIR, d);
     const file = join(dir, "SKILL.md");
     if (!existsSync(file)) continue;
     const text = readFileSync(file, "utf8");
     const { data, body } = splitFrontmatter(text);
-    const path = `skills/${d}/SKILL.md`;
+    const path = `${SKILLS_DIR}/${d}/SKILL.md`;
     const files = listFiles(dir)
       .map((f) => toPosix(relative(dir, f)))
       .filter((f) => f !== "SKILL.md")
