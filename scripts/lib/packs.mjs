@@ -63,7 +63,8 @@ function copyTree(src, dest, skip = () => false) {
 }
 
 // Writes the tree of the `packs` branch into out: plugins/<pack>/ with the pack's own
-// files plus a copy of each skill it lists. Returns [{ name, skills }].
+// files plus a copy of each skill it lists, a README and a vercel.json that turns
+// deployments off for the branch. Returns [{ name, skills }].
 export function buildPacks(root, out) {
   const source = skillsDir(root);
   rmSync(out, { recursive: true, force: true });
@@ -88,6 +89,11 @@ export function buildPacks(root, out) {
       ...built.map((p) => `- \`plugins/${p.name}\`: ${p.skills.join(", ")}`),
       "",
     ].join("\n"),
+  );
+  // Vercel builds a preview for every pushed branch. This one has no site to build.
+  writeFileSync(
+    join(out, "vercel.json"),
+    JSON.stringify({ $schema: "https://openapi.vercel.sh/vercel.json", git: { deploymentEnabled: false } }, null, 2) + "\n",
   );
   return built;
 }
