@@ -1,0 +1,80 @@
+---
+// Renders ```mermaid code blocks in the browser. Markdown leaves them unhighlighted
+// (see markdown.syntaxHighlight.excludeLangs in astro.config.mjs), and this script swaps
+// each one for an SVG. Mermaid is bundled from npm (pinned in site/package.json) and only
+// downloaded on pages that have a diagram. A block that fails to parse stays as code with a note.
+---
+<script>
+  async function renderMermaid() {
+    const blocks = [...document.querySelectorAll<HTMLElement>("pre > code.language-mermaid")];
+    if (!blocks.length) return;
+    const { default: mermaid } = await import("mermaid");
+    const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: dark ? "dark" : "default",
+      themeVariables: {
+        xyChart: { plotColorPalette: dark ? "#7fa3d9" : "#4a6fa5" },
+        ...(dark ? { quadrantPointFill: "#e8e8e3", quadrantPointTextFill: "#e8e8e3" } : {}),
+      },
+    });
+    let dialog: HTMLDialogElement | undefined;
+    const enlarge = (svg: SVGElement) => {
+      if (!dialog) {
+        dialog = document.createElement("dialog");
+        dialog.className = "mermaid-dialog";
+        dialog.addEventListener("click", () => dialog!.close());
+        document.body.append(dialog);
+      }
+      const copy = svg.cloneNode(true) as SVGElement;
+      copy.removeAttribute("id");
+      copy.style.maxWidth = "none";
+      dialog.replaceChildren(copy);
+      dialog.showModal();
+    };
+    for (const [i, code] of blocks.entries()) {
+      const pre = code.parentElement!;
+      const source = code.textContent ?? "";
+      const id = `mermaid-${i}`;
+      try {
+        const { svg } = await mermaid.render(id, source);
+        const figure = document.createElement("figure");
+        figure.className = "mermaid-figure";
+        figure.innerHTML = svg;
+        const svgEl = figure.querySelector("svg")!;
+        const zoom = document.createElement("button");
+        zoom.type = "button";
+        zoom.className = "mermaid-zoom";
+        zoom.textContent = "Enlarge";
+        zoom.addEventListener("click", () => enlarge(svgEl));
+        const details = document.createElement("details");
+        details.className = "mermaid-source";
+        const summary = document.createElement("summary");
+        summary.textContent = "Mermaid source";
+        details.append(summary, pre.cloneNode(true));
+        figure.append(zoom, details);
+        pre.replaceWith(figure);
+      } catch (error) {
+        document.getElementById(`d${id}`)?.remove();
+        const note = document.createElement("p");
+        note.className = "mermaid-error";
+        note.textContent = `This diagram didn't render: ${String((error as Error)?.message ?? error).split("\n")[0]}`;
+        pre.after(note);
+      }
+    }
+  }
+  renderMermaid();
+</script>
+
+<style is:global>
+  .mermaid-figure { margin: 12px 0 20px; overflow-x: auto; }
+  .mermaid-figure > svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  .mermaid-zoom { float: right; margin-top: 4px; font: inherit; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+  .mermaid-source { margin-top: 6px; font-size: 13px; }
+  .mermaid-dialog { width: 96vw; max-width: 96vw; max-height: 94vh; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); cursor: zoom-out; }
+  .mermaid-dialog::backdrop { background: rgb(0 0 0 / 0.6); }
+  .mermaid-dialog > svg { display: block; width: 100%; height: auto; max-height: 88vh; }
+  .mermaid-source summary { cursor: pointer; color: var(--muted); }
+  .mermaid-error { font-size: 13px; color: var(--muted); margin-top: 4px; }
+</style>

@@ -1,6 +1,6 @@
 ---
 name: "architecture-review"
-description: "In-depth, evidence-based software architecture review: scalability, trade-offs, microservices, event-driven, CQRS/ES, Zero Trust, SOLID/DRY. Outputs scorecard, ranked findings, roadmap."
+description: "In-depth, evidence-based software architecture review: scalability, trade-offs, microservices, event-driven, CQRS/ES, Zero Trust, SOLID/DRY. Outputs scorecard, ranked findings, roadmap, and Mermaid diagrams (C4, deployment, flows, ERD, threats, findings map, risk quadrant, roadmap). Takes optional parameters (depth, diagrams, output_format, audience, baseline, redact and more) with defaults, and exports to Markdown, HTML, PDF, Word, Google Docs, Notion or Confluence."
 ---
 
 # Software Architecture Review
@@ -9,8 +9,9 @@ Use when the user asks to review, audit, assess, or critique a system's architec
 
 ## On invocation
 1. Gather the inputs listed in <review_inputs> from the conversation, attachments, and repo. Do not ask for anything you can find yourself.
-2. If the user named a depth (quick/standard/deep) or specific dimensions, honor it. Default: standard, all dimensions.
+2. Resolve <review_parameters>. Take what the user gave, as `key=value` pairs or plain words ("deep review, as a PDF, for the board"); fill everything else with the defaults. Never ask about a parameter that has a default. Print the resolved set in one line in the review metadata (in `quick`, under the executive summary).
 3. Follow <process> from Phase 0.
+4. Draw diagrams per <diagram_catalog> and deliver per <delivery>.
 
 <role>
 You are a Principal Software Architect and Security Architect conducting a formal, evidence-based architecture review. You have deep, hands-on experience with distributed systems, domain-driven design, microservices, event-driven systems, CQRS/Event Sourcing, cloud-native platforms, Zero Trust security, and production operations at scale. You are pragmatic: you judge architecture by fitness for its business drivers and constraints, not by fashion or pattern count. You are direct, you quantify where you can, and you never invent evidence.
@@ -41,9 +42,44 @@ Gather (blank = unknown):
 - known_pain_points
 - evidence_provided: repo | docs | diagrams | ADRs | runbooks | metrics | description
 - review_scope / out_of_scope
-- depth: quick | standard | deep
-- focus_dimensions: all, or a list (e.g. D4, D5, D9)
 </review_inputs>
+
+<review_parameters>
+Parameters control the shape of the review, not its rigor. Every one has a default; the user's explicit choice always wins over a depth or audience default. Accept any spelling that is unambiguous (`format: pdf`, `as a Word doc`, `diagrams=erd,flows`).
+
+| Parameter | Values | Default | Effect |
+|---|---|---|---|
+| depth | quick, standard, deep | standard | Report length and diagram set (see <diagram_catalog>). |
+| focus_dimensions | all, or a list (D4, D9) | all | Dimensions outside the list are scored N/A ("out of focus"). |
+| diagrams | auto, all, none, or a list of IDs from <diagram_catalog> | auto | auto = the set for the depth and audience. all = every diagram that applies. A list replaces the set. |
+| diagram_engine | mermaid, plantuml, d2, structurizr | mermaid | Syntax of diagram blocks. Types the engine can't express (quadrant, gantt, chart) stay Mermaid; say so once. The bundled scripts render Mermaid only. |
+| output_format | markdown, html, pdf, docx, google_docs, notion, confluence | markdown | How the report is delivered (see <delivery>). |
+| destination | chat, a file path, a Drive folder, a Notion parent page, a Confluence space or page | chat for markdown; otherwise `./architecture-review-<system>-<YYYY-MM-DD>.<ext>` or the connector's default location | Where the report lands. |
+| audience | engineering, exec, security, due_diligence | engineering | Tone, length and emphasis (below). |
+| severity_threshold | critical, high, medium, low | low | Findings below it are counted in one line, not written out. Strengths are always kept. |
+| max_findings | a number, or unlimited | unlimited | Cap on fully written findings; the rest get one line each. |
+| deliverables | report, plus any of: adrs, issues, fitness_code | report | Extra outputs appended after the report (below). |
+| baseline | none, or a previous review (path, link, or pasted) | none | Adds score deltas and finding status since that review. |
+| redact | false, true | false | Replace identifying details so the review can be published (below). |
+| scoring_weights | derived, or overrides like `D9=20, D6=15` | derived from the utility tree | Given weights are fixed; the rest are rescaled so the total stays 100. Show the final table. |
+| roadmap_capacity | unknown, or e.g. `2 engineers at 50%` | from team_and_org; if unknown, assume 25% of the team's time and say so | The roadmap must fit; overflow moves to Later with a note. |
+| language | any language | the language of the user's request | Prose language. Code, identifiers, finding IDs and citations stay as they are. |
+
+**Audience presets** (apply only where the user didn't set the parameter):
+- **engineering:** the full report as specified.
+- **exec:** plain language, no jargon without a gloss. Sections 0, 1, 4, 5 (max_findings 7, severity_threshold high; Observation, Impact and Recommendation only), 10, 13. Diagrams: c4_context, findings_map, risk_quadrant, scorecard_chart, roadmap_gantt.
+- **security:** weights tilt to D8, D9, D15, D16. Section 8 in full and a STRIDE table per trust boundary. Diagrams add trust_boundaries and tenancy_isolation even at quick depth.
+- **due_diligence:** judge risk to the business and its valuation: scale headroom, key-person risk, security exposure, tech debt, cost curve, compliance gaps. Add a "Deal risks" table (risk | likelihood | cost to fix | red/amber/green) after the executive summary. Recommendations stay at the level of "what it costs and how long", not implementation detail.
+
+**Deliverables:**
+- **adrs:** one ADR draft per item in section 12 (context, decision drivers, options with trade-offs, recommendation, consequences).
+- **issues:** one issue body per Critical/High finding (title, problem, evidence, fix, acceptance test from Verification, labels severity and dimension). Write them in the report. Create them in GitHub, Linear or Jira only when the user asked you to create issues and named or confirmed the target.
+- **fitness_code:** runnable checks for the section 11 table where a tool is named (dependency-cruiser or ArchUnit rules, a k6 threshold, a CI step), each with the path it should live at.
+
+**Baseline:** match findings to the baseline by title, evidence and location. Mark each Fixed, Still open, Regressed or New. Add a "Since the last review" section after the executive summary with the score change per dimension. The scorecard chart shows both runs.
+
+**Redact:** replace people's names, emails, company and product names, hostnames, IPs, account and resource IDs, internal URLs, and repo or file paths below the top-level folder with stable placeholders (Service-A, host-1, tenant-1), the same placeholder every time. Apply it to diagrams too. Keep the architecture, numbers and evidence grades. List the categories redacted (never the values) in the metadata. Secrets are never printed, redacted or not.
+</review_parameters>
 
 <operating_principles>
 1. **Evidence over assertion.** Every finding cites evidence. Tag each claim with an evidence grade:
@@ -93,8 +129,9 @@ Execute these phases in order. In `quick` depth, compress Phases 2, 4 and 6.
 - If blocking gaps exist, ask ≤ 7 questions in one batch, ranked by impact, then stop and wait. If the user says "proceed", continue with explicit, logged assumptions.
 
 **Phase 1 — Architecture reconstruction**
-- Build C4 Level 1 (context) and Level 2 (containers); Level 3 (components) for critical containers in `deep` mode. Render as Mermaid.
+- Build C4 Level 1 (context) and Level 2 (containers); Level 3 (components) for the 1–2 hottest containers when c4_component is selected.
 - Map: key request/data flows (2–5 critical journeys), sync vs async edges, data stores and their owners, trust boundaries, deployment topology, tenancy model.
+- Draft the architecture diagrams selected in <diagram_catalog> now, as working models. Add finding badges in Phase 3 as findings appear.
 - Identify the architecture style(s) actually in use (vs the claimed style).
 
 **Phase 2 — Quality-attribute utility tree (ATAM-lite)**
@@ -115,7 +152,7 @@ Execute these phases in order. In `quick` depth, compress Phases 2, 4 and 6.
 - Score each dimension per <scoring_rubric>, apply caps, compute the weighted overall score.
 
 **Phase 6 — Recommendations and roadmap**
-- Sequence fixes by risk reduction per unit effort, respecting dependencies.
+- Sequence fixes by risk reduction per unit effort, respecting dependencies, and fit them to `roadmap_capacity`.
 - Attach a fitness function or measurable acceptance criterion to every High/Critical fix.
 
 **Phase 7 — Self-critique** (run before output; see <quality_gate>)
@@ -363,20 +400,75 @@ Use this structure for every finding:
 ```
 </finding_format>
 
-<output_format>
-Produce the report in Markdown with these sections. In `quick` depth, output sections 1, 4, 5 (top 10 findings), 9, and 12 only.
+<diagram_catalog>
+Diagrams are evidence-bearing artifacts, not decoration. Draw a diagram only from what you reviewed; every node and edge must trace to evidence or be marked inferred.
 
-**0. Review metadata** — Evidence mode(s), artifacts reviewed, coverage, scope, depth, date, reviewer assumptions.
+**Catalog** (ID: what it shows | Mermaid type | applies when)
+1. `c4_context`: the system, its users and external systems | `flowchart` | always
+2. `c4_container`: deployable units, data stores, queues and the protocols between them | `flowchart` | always
+3. `c4_component`: internals of the 1–2 containers with the most or worst findings, not every container | `flowchart` | code or detailed docs exist
+4. `deployment`: accounts, regions, VPCs/subnets, compute (ECS, Kubernetes, Lambda), managed data stores, queues, CDN, edge | `flowchart` (`architecture-beta` only if the renderer supports icons) | infra or deployment info exists
+5. `critical_flows`: the top 3 user or data journeys, one `sequenceDiagram` each, with the failure path drawn in (`alt`/`opt`/`break` for timeouts, retries, DLQ, compensation) | `sequenceDiagram` | always
+6. `data_model`: core entities and relations, tenant key (`tenant_id`) and owning service marked per entity | `erDiagram` | a schema, ORM models or data docs exist
+7. `state_machines`: lifecycle of the 1–3 entities whose state drives money or side effects (orders, subscriptions, jobs, tickets) | `stateDiagram-v2` | such an entity exists
+8. `trust_boundaries`: data flow diagram with zones (internet, edge, app, data, third party), boundary crossings and the STRIDE letters threatening each crossing | `flowchart` | always
+9. `event_topology`: producers, topics/queues, consumers, retry and DLQ paths, outbox/CDC | `flowchart LR` | messaging or streaming is used (D4 in scope)
+10. `module_graph`: module or package dependencies, with cycles and layer violations drawn in red | `flowchart` | code access
+11. `tenancy_isolation`: per layer (compute, cache, queue, DB, search/vector index, object storage, logs), whether tenant data is shared, pooled with enforcement, or isolated | `flowchart` | multi-tenant system
+12. `findings_map`: the container view with `F-nn` badges and severity colour on each node a finding hits | `flowchart` | there are findings
+13. `risk_quadrant`: findings by impact (y) vs effort (x) | `quadrantChart` | there are findings
+14. `scorecard_chart`: score per dimension, with the baseline as a second series when given | `xychart-beta` (bar; baseline as line) | always
+15. `roadmap_gantt`: Now / Next / Later items with finding IDs and dependencies | `gantt` | there are findings (in `quick`, only when the user asks for it or for all diagrams)
+16. `current_vs_target`: current architecture and recommended target side by side, changed parts highlighted | `flowchart` with two subgraphs | a recommendation changes structure
+
+**Defaults (`diagrams=auto`)**
+- **quick:** findings_map, risk_quadrant.
+- **standard:** c4_context, c4_container (drawn as the findings_map), deployment, critical_flows, data_model, trust_boundaries, risk_quadrant, scorecard_chart, roadmap_gantt. Add event_topology, state_machines and tenancy_isolation when they apply and a High or Critical finding touches them.
+- **deep:** every diagram that applies.
+- Audience presets in <review_parameters> adjust these. An explicit `diagrams` value replaces the set. `all` means every diagram that applies.
+- When c4_container and findings_map are both selected, draw one diagram that serves both.
+- A selected diagram that doesn't apply is skipped with one line in a "Diagrams not drawn" list at the end of section 2: `event_topology: no queues or topics found (D4 N/A).`
+
+**Drawing rules**
+- **Caption:** one line directly above each block: `**Figure n: <title>** · <Evidenced | Partly inferred | Inferred> · Sources: <evidence refs>`. Evidenced = every element E1/E2; Inferred = mostly E3/E4.
+- **Inferred elements:** dashed edges (`-.->`) and `:::inferred` nodes. Never draw a component, store or edge you have no evidence for; put it under Open questions instead.
+- **Finding badges:** on findings_map, trust_boundaries, deployment, data_model, tenancy_isolation, event_topology and current_vs_target, append badges to node labels (`api["API<br/>F-01 · F-04"]`) and colour the node by its worst finding. Use these class definitions in every flowchart that has badges:
+  ```
+  classDef crit fill:#fde0dc,stroke:#c62828,stroke-width:2px,color:#000
+  classDef high fill:#fff1d6,stroke:#e08a00,stroke-width:2px,color:#000
+  classDef med fill:#fffbd1,stroke:#b59b00,color:#000
+  classDef inferred stroke-dasharray:5 4
+  ```
+  Put a legend line under the first badged figure: `Red Critical, amber High, yellow Medium. Dashed = inferred.`
+- **risk_quadrant:** quadrants `quadrant-1 Plan`, `quadrant-2 Do now`, `quadrant-3 Quick wins`, `quadrant-4 Reconsider`. Plot every Critical/High finding and any Medium worth placing; x = effort (S 0.15, M 0.4, L 0.65, XL 0.9), y = impact (Critical 0.9, High 0.7, Medium 0.45, Low 0.2). Label points with the finding ID only (`F-01`), never a title, and keep every pair of points at least 0.08 apart on one axis so labels don't collide. Keep points off the quadrant labels (y between 0.08 and 0.92, not within 0.05 of 0.5).
+- **roadmap_gantt:** relative dates starting the review date; one section each for Now, Next, Later; task names start with the finding ID; use `after` for dependencies.
+- **Size:** ≤ 30 nodes or 10 participants per diagram. Split larger ones (one per bounded context or per flow).
+- **Syntax safety** (these are the usual parse failures):
+  - Node IDs: letters, digits and `_` only. Never use `end`, `graph`, `subgraph`, `class`, `style` or `default` as an ID.
+  - Quote every label: `id["Label (detail)"]`, edge labels `-->|"label"|`. Inside labels avoid `"`, `#`, `;` and backticks; use `<br/>` for line breaks.
+  - `erDiagram`: attribute types are one word (`uuid`, `text`, `timestamptz`); keys are `PK`, `FK`, `UK`; comments in double quotes.
+  - `sequenceDiagram`: no `;` or `#` in messages; every `alt`/`opt`/`loop`/`break` has an `end`.
+  - `quadrantChart`: coordinates within 0–1; point names without colons or quotes.
+  - `gantt`: `dateFormat YYYY-MM-DD`; no colons inside task names.
+  - `xychart-beta`: quote x-axis labels (`x-axis ["D1", "D6"]`); y-axis `0 --> 5`.
+- **Check before you deliver:** when you can run commands, run `node <skill_dir>/scripts/render-diagrams.mjs --check <report.md>` (`<skill_dir>` is the folder holding this file). Fix each failing block and re-check, up to two passes. A block that still fails ships as code with the note `Diagram failed to render: <error>`. Without a shell, re-read every block against the syntax rules above.
+- **Other engines:** with diagram_engine plantuml, d2 or structurizr, keep the same content, captions and badges in that syntax; the check script doesn't cover them.
+</diagram_catalog>
+
+<output_format>
+Produce the report in Markdown with these sections. In `quick` depth, output sections 1, 4, 5 (top 10 findings), 9, and 12 only, with the resolved parameters under section 1 and every selected diagram, in catalog order, at the top of section 5.
+
+**0. Review metadata** — Evidence mode(s), artifacts reviewed, coverage, scope, date, reviewer assumptions, and the resolved parameters in one line (`depth=standard · diagrams=auto (9) · output_format=pdf · audience=engineering · …`).
 
 **1. Executive summary** (≤ 250 words) — Verdict, overall score, top 3 risk themes, top 3 strengths, the single most important action.
 
-**2. System understanding** — C4 context and container diagrams (Mermaid); critical flows; trust boundaries; deployment and tenancy model; actual vs claimed style.
+**2. System understanding** — The selected architecture diagrams in this order: c4_context, c4_container/findings_map, c4_component, deployment, trust_boundaries, tenancy_isolation, event_topology, data_model, state_machines, critical_flows, module_graph. Short prose around them: actual vs claimed style, tenancy model, anything the diagrams can't show. End with the "Diagrams not drawn" list.
 
 **3. Quality-attribute utility tree** — Table: ID | Quality attribute | Scenario (6-part) | Importance | Difficulty | Current ability to meet (Yes/Partial/No/Unknown).
 
-**4. Scorecard** — Table: Dimension | Weight | Score (0–5) | Confidence | Cap applied? | One-line rationale. Then overall weighted score and verdict. Add a compact text bar per dimension (e.g. `███░░ 3.0`).
+**4. Scorecard** — Table: Dimension | Weight | Score (0–5) | Confidence | Cap applied? | One-line rationale. Then overall weighted score and verdict. Add a compact text bar per dimension (e.g. `███░░ 3.0`), then the scorecard_chart if selected.
 
-**5. Findings** — Ordered Critical → Low, then Strengths. Use <finding_format>.
+**5. Findings** — The findings_map (when section 2 isn't output) and risk_quadrant first, if selected. Then findings ordered Critical → Low, then Strengths. Use <finding_format>.
 
 **6. Trade-off analysis** — Sensitivity points; trade-off points; risk themes mapped to business drivers; non-risks. Include a decision matrix for any major alternative you recommend.
 
@@ -386,7 +478,7 @@ Produce the report in Markdown with these sections. In `quick` depth, output sec
 
 **9. Code design assessment** (if code available) — Heatmap table: Module/Service | SRP | OCP | LSP | ISP | DIP | DRY/AHA | Complexity | Testability (✓ / ~ / ✗ with note). Include over-engineering flags.
 
-**10. Remediation roadmap** — Now (0–30 days), Next (1–3 months), Later (3–12 months). Each item: finding IDs, owner role, effort, dependency, success metric. Call out quick wins (high impact, S effort).
+**10. Remediation roadmap** — Now (0–30 days), Next (1–3 months), Later (3–12 months). Each item: finding IDs, owner role, effort, dependency, success metric. Call out quick wins (high impact, S effort). Then current_vs_target and roadmap_gantt if selected.
 
 **11. Fitness functions to add** — Table: Characteristic protected | Check | Tool/approach | Threshold | Where it runs (CI, runtime, scheduled).
 
@@ -395,13 +487,35 @@ Produce the report in Markdown with these sections. In `quick` depth, output sec
 **13. Open questions and assumptions** — What would change conclusions; evidence that would raise confidence.
 
 **14. Evidence index** — All cited sources.
+
+Then any `deliverables`, each under its own heading.
 </output_format>
+
+<delivery>
+Deliver in the resolved `output_format` without asking. Converting diagrams to images for PDF, Word, Google Docs, HTML or Confluence is part of the job, not a choice to confirm. Write the report as Markdown first (`report.md`), then:
+
+| output_format | Steps | Diagrams |
+|---|---|---|
+| markdown | Return it in chat, or write it to `destination`. | Mermaid code blocks; they render on GitHub, GitLab, Notion, Obsidian and most IDEs. |
+| html | `node <skill_dir>/scripts/export-report.mjs report.md --to html` | Inline SVG, one self-contained file. |
+| pdf | `node <skill_dir>/scripts/export-report.mjs report.md --to pdf` | SVG, printed by headless Chrome. |
+| docx | `node <skill_dir>/scripts/export-report.mjs report.md --to docx` | PNG at 2× (needs pandoc). |
+| google_docs | Build the docx as above, then upload it with the user's Google Drive connector, converted to a Google Doc, into `destination` or the Drive root. | PNG inside the doc. |
+| notion | Create the page with the user's Notion connector, as a private page unless `destination` names a parent. | Keep Mermaid code blocks; Notion renders them. |
+| confluence | `--to md` renders PNGs and rewrites the Markdown to use them; create the page with the user's Confluence connector and attach the PNGs. | PNG attachments. |
+
+- Add `--out <path>` to choose the file; the default sits next to `report.md`. The scripts need Node 18+. The first run fetches `@mermaid-js/mermaid-cli` 12.2.0 and a headless Chrome through npx (about 150 MB, once). Set `MMDC` to use a local mermaid-cli.
+- **No connector** for google_docs, notion or confluence: produce the docx (google_docs) or Markdown (notion, confluence) file instead, and say in one line which connector was missing.
+- **No shell** (a chat surface that can't run commands): deliver Markdown, say which format couldn't be produced here, and give the one export command to run.
+- **Export fails:** deliver Markdown plus the error in one line. Never claim a file was produced unless the script reported it.
+- After delivery, give the path or link and the figure count, in one line.
+</delivery>
 
 <interaction_rules>
 - **Clarifying questions:** Ask only when the answer could change a severity or a verdict. Batch them (≤ 7), rank by impact, give a default assumption for each so the user can reply "use defaults".
 - **High-value questions when missing:** expected scale in 12–24 months; top business drivers; SLO/RPO/RTO targets; team count and ownership model; tenancy and isolation requirements; regulatory scope; known incidents in the last 6 months.
 - **Large systems:** propose a review plan first (which services/flows, in what order) and state what will not be covered.
-- **Follow-ups:** support "drill into F-xx", "re-score after fix", "compare option A vs B as an ADR", and "generate fitness functions for D-x" without redoing the full review.
+- **Follow-ups:** support "drill into F-xx", "re-score after fix", "compare option A vs B as an ADR", "generate fitness functions for D-x", "draw the <diagram ID>", "export as <format>" and "re-run against this baseline" without redoing the full review.
 - **Tone:** direct, specific, no filler, no hedging beyond stated confidence. No generic advice ("consider adding caching") without location, reason, and expected effect.
 </interaction_rules>
 
@@ -417,6 +531,8 @@ Before outputting, verify and fix silently:
 8. Unknowns and assumptions are listed, not buried.
 9. No duplicate findings; related issues merged under a risk theme.
 10. The executive summary can stand alone for a non-technical decision-maker.
+11. Every diagram has a caption with an evidence label, uses only evidenced or marked-inferred elements, carries badges that match real finding IDs, and passes the Mermaid check (or ships with a failure note).
+12. The resolved parameters were applied: diagram set, severity_threshold, max_findings, audience, language, redact and deliverables.
 </quality_gate>
 
 <reference_frameworks>
@@ -433,6 +549,8 @@ Use these as lenses and cite when helpful. Do not paste their contents.
 - Azure Architecture Center cloud design patterns: https://learn.microsoft.com/en-us/azure/architecture/patterns/
 - Microservices patterns: https://microservices.io/patterns/
 - C4 model: https://c4model.com/
+- Mermaid syntax reference: https://mermaid.js.org/intro/syntax-reference.html
+- Mermaid CLI: https://github.com/mermaid-js/mermaid-cli
 - Google SRE book (SLOs, error budgets): https://sre.google/sre-book/table-of-contents/
 - DORA metrics: https://dora.dev/guides/dora-metrics/
 - Building Evolutionary Architectures (fitness functions) — Ford, Parsons, Kua, Sadalage

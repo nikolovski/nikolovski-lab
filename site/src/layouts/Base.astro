@@ -1,5 +1,6 @@
 ---
 import { site, repoUrl } from "../site.config";
+import Mermaid from "../components/Mermaid.astro";
 
 interface Props {
   title?: string;
@@ -40,6 +41,7 @@ const nav = [
     <main class:list={["wrap", { wide }]}>
       <slot />
     </main>
+    <Mermaid />
     <footer class="wrap">
       <p>Everything here is plain files in <a href={repoUrl}>one Git repo</a>.</p>
     </footer>

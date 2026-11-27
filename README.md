@@ -80,7 +80,7 @@ How it works: `api/mcp.mjs` is a Vercel Function next to the static site; `verce
 
 | Skill | What it does |
 | --- | --- |
-| [architecture-review](plugins/nikolovski-lab/skills/architecture-review/SKILL.md) | Evidence-based architecture review. Outputs a scorecard, ranked findings and a roadmap. |
+| [architecture-review](plugins/nikolovski-lab/skills/architecture-review/SKILL.md) | Evidence-based architecture review. Outputs a scorecard, ranked findings, a roadmap and Mermaid diagrams, as Markdown, HTML, PDF, Word, Google Docs, Notion or Confluence. |
 | [improve-prompt](plugins/nikolovski-lab/skills/improve-prompt/SKILL.md) | Rewrites a rough prompt for any AI tool. Asks first, states assumptions, hands the prompt back for your OK. |
 
 ## Working on the repo

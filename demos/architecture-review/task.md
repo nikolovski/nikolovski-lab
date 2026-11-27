@@ -1,4 +1,4 @@
-Do a quick architecture review of this system.
+Do a quick architecture review of this system. Include all the diagrams that apply.
 
 > Parcelly is a fictional system written for this demo. Any resemblance to a real product is accidental.
 

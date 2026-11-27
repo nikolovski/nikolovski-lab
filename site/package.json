@@ -9,6 +9,7 @@
     "check": "astro check"
   },
   "dependencies": {
-    "astro": "^7.4.13"
+    "astro": "^7.4.13",
+    "mermaid": "12.3.0"
   }
 }
