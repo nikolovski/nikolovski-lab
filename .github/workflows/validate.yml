@@ -28,6 +28,9 @@ jobs:
       - name: Validate content (SKILL.md frontmatter, lessons, resources, marketplace)
         run: npm run validate
 
+      - name: Check that Mermaid diagrams in lessons and demo outputs parse
+        run: npm run check:mermaid
+
       - name: Test the MCP server
         run: npm test
 

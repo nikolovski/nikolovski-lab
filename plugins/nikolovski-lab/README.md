@@ -15,7 +15,7 @@ In the Claude app, add `nikolovski/nikolovski-lab` as a plugin marketplace, then
 
 | Skill | What it does |
 | --- | --- |
-| [architecture-review](skills/architecture-review/SKILL.md) | Evidence-based review of a codebase or design: scorecard, ranked findings and a roadmap. |
+| [architecture-review](skills/architecture-review/SKILL.md) | Evidence-based review of a codebase or design: scorecard, ranked findings, a roadmap and diagrams. |
 | [improve-prompt](skills/improve-prompt/SKILL.md) | Rewrites a vague prompt into a clear, complete one for any AI tool. |
 
 ## How it's built

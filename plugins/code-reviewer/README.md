@@ -21,7 +21,7 @@ In the Claude app, add `nikolovski/nikolovski-lab` as a plugin marketplace, then
 
 | Skill | Why it's in this pack |
 | --- | --- |
-| [architecture-review](../nikolovski-lab/skills/architecture-review/SKILL.md) | Evidence-based review of a codebase or design: scorecard, ranked findings and a roadmap. |
+| [architecture-review](../nikolovski-lab/skills/architecture-review/SKILL.md) | Evidence-based review of a codebase or design: scorecard, ranked findings, a roadmap and diagrams. |
 
 ## Planned, not in yet
 
